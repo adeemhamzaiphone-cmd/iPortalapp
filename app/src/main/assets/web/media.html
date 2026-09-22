@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPAK Portal - Media of Events</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #203265;
+            --lime: #A8C500;
+            --white: #FFFFFF;
+            --med-grey: #9C9C9C;
+            --light-grey: #D4D4D4;
+            --bg-color: #F8F9FA;
+            --border-light: #E5E7EB;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; cursor: none; }
+        body { color: var(--navy); background: var(--bg-color); min-height: 100vh; overflow-x: hidden; }
+
+        /* CURSOR */
+        .cursor-dot { width: 8px; height: 8px; background: var(--lime); position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; box-shadow: 0 0 10px var(--lime); transform: translate(-50%, -50%); }
+        .cursor-outline { width: 40px; height: 40px; border: 2px solid var(--navy); position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; transition: width 0.2s, height 0.2s, background 0.2s; transform: translate(-50%, -50%); }
+        body.hovering .cursor-outline { width: 60px; height: 60px; border-color: var(--lime); background: rgba(168, 197, 0, 0.1); }
+
+        /* HEADER */
+        .top-bar { background: rgba(255,255,255,0.98); border-bottom: 1px solid var(--border-light); height: 64px; display: flex; justify-content: space-between; align-items: center; padding: 0 32px; position: fixed; top: 0; left: 0; width: 100%; z-index: 100; backdrop-filter: blur(10px); }
+        .logo-link img { width: 100px; height: auto; transition: opacity 0.3s ease; }
+        .logo-link:hover img { opacity: 0.8; }
+        .header-actions { display: flex; align-items: center; gap: 16px; }
+        .user-icon { font-size: 22px; color: var(--navy); transition: color 0.3s ease; }
+        .user-icon:hover { color: var(--lime); }
+        .logout-btn { padding: 6px 16px; background: transparent; border: 1px solid var(--border-light); color: var(--navy); border-radius: 6px; font-weight: 500; font-size: 13px; transition: all 0.3s ease; }
+        .logout-btn:hover { border-color: var(--navy); background: #f3f4f6; }
+
+        /* LAYOUT */
+        .wrapper { padding-top: 90px; padding-bottom: 30px; }
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* UNIFORM SHORT BENTO BOX GRID */
+        .gallery-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            grid-auto-rows: 150px; 
+            gap: 16px; 
+            animation: slideUp 0.6s ease-out; 
+        }
+
+        .event-card {
+            background: var(--white); 
+            border: 1px solid rgba(0,0,0,0.03); 
+            border-radius: 24px; 
+            padding: 16px 20px;
+            text-decoration: none; 
+            color: var(--navy); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            position: relative; 
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+
+        .event-card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at top right, rgba(168,197,0,0.08), transparent 70%); opacity: 0; transition: 0.3s; }
+        .event-card:hover { transform: scale(0.98); border-color: rgba(168,197,0,0.3); box-shadow: 0 8px 25px rgba(32,50,101,0.06); }
+        .event-card:hover::after { opacity: 1; }
+
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
+        .event-icon { font-size: 1.4rem; color: var(--navy); transition: 0.3s; }
+        .event-card:hover .event-icon { color: var(--lime); transform: scale(1.1); }
+        
+        .year-pill { font-size: 0.65rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: #F0F2F5; color: var(--navy); transition: 0.3s; z-index: 2; }
+        .event-card:hover .year-pill { background: var(--navy); color: var(--lime); }
+        
+        .card-content { z-index: 2; }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; line-height: 1.2; letter-spacing: -0.3px; }
+        .card-desc { font-size: 0.7rem; color: var(--med-grey); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .arrow-icon { position: absolute; bottom: 16px; right: 16px; opacity: 0; transform: translateX(-5px) translateY(5px); transition: 0.3s; color: var(--lime); font-size: 1rem; z-index: 2; }
+        .event-card:hover .arrow-icon { opacity: 1; transform: translateX(0) translateY(0); }
+
+        /* Photo count badge */
+        .photo-count { position: absolute; top: 16px; left: 16px; background: var(--lime); color: var(--navy); font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 12px; opacity: 0; transition: 0.3s; z-index: 3; }
+        .event-card:hover .photo-count { opacity: 1; }
+        .event-card:hover .event-icon { opacity: 0; } 
+
+        /* ===================== LIGHTBOX MODAL ===================== */
+        .lightbox-overlay { position: fixed; inset: 0; background: rgba(10, 15, 35, 0.97); z-index: 1000; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(5px); }
+        .lightbox-overlay.active { display: flex; }
+
+        .lb-header { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; position: absolute; top: 0; left: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); z-index: 10; }
+        .lb-title { color: white; font-size: 1.1rem; font-weight: 700; }
+        .lb-subtitle { color: var(--lime); font-size: 0.75rem; letter-spacing: 1px; margin-top: 2px; }
+        
+        .lb-top-actions { display: flex; align-items: center; gap: 20px; }
+        .lb-close { background: none; border: none; color: white; font-size: 1.6rem; transition: color 0.2s, transform 0.2s; }
+        .lb-close:hover { color: var(--lime); transform: rotate(90deg); }
+
+        .lb-btn { display: flex; align-items: center; gap: 7px; padding: 7px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; transition: all 0.25s; text-decoration: none; border: none; font-family: inherit; }
+        .lb-btn-download { background: var(--lime); color: var(--navy); }
+        .lb-btn-download:hover { background: #c0e000; transform: scale(1.05); }
+
+        .lb-image-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 80px 90px; }
+        
+        .lb-iframe { width: 100%; max-width: 1100px; height: 75vh; border: none; border-radius: 12px; background: #000; box-shadow: 0 30px 80px rgba(0,0,0,0.8); transition: opacity 0.35s ease; z-index: 5; }
+        .lb-iframe.fading { opacity: 0; }
+
+        .lb-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--lime); border-radius: 50%; animation: spin 0.8s linear infinite; display: none; position: absolute; z-index: 2; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .lb-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; width: 48px; height: 48px; border-radius: 50%; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.25s; backdrop-filter: blur(10px); z-index: 10; }
+        .lb-nav:hover { background: var(--lime); color: var(--navy); border-color: var(--lime); transform: translateY(-50%) scale(1.1); }
+        .lb-prev { left: 16px; }
+        .lb-next { right: 16px; }
+
+        .lb-footer { width: 100%; position: absolute; bottom: 0; left: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 20px 28px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; z-index: 10; }
+        .lb-counter { color: rgba(255,255,255,0.6); font-size: 0.8rem; }
+        .lb-counter span { color: white; font-weight: 700; }
+
+        .lb-thumbs { display: flex; gap: 8px; overflow-x: auto; max-width: 60%; padding-bottom: 4px; }
+        .lb-thumbs::-webkit-scrollbar { height: 3px; }
+        .lb-thumbs::-webkit-scrollbar-thumb { background: var(--lime); border-radius: 3px; }
+        .lb-thumb { width: 44px; height: 32px; object-fit: cover; border-radius: 6px; border: 2px solid transparent; opacity: 0.5; transition: all 0.2s; flex-shrink: 0; }
+        .lb-thumb.active { border-color: var(--lime); opacity: 1; }
+        .lb-thumb:hover { opacity: 0.9; }
+
+        .lb-keys { color: rgba(255,255,255,0.3); font-size: 0.7rem; text-align: center; padding: 6px; }
+        .lb-keys kbd { background: rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 5px; margin: 0 2px; }
+
+        .lb-empty { color: rgba(255,255,255,0.5); text-align: center; padding: 40px; }
+        .lb-empty i { font-size: 2.5rem; color: rgba(255,255,255,0.2); margin-bottom: 16px; display: block; }
+
+        footer { text-align: center; margin-top: 50px; color: var(--light-grey); font-size: 0.75rem; letter-spacing: 1px; }
+
+        @media (max-width: 768px) {
+            .cursor-dot, .cursor-outline { display: none; }
+            * { cursor: auto; }
+            .top-bar { padding: 0 16px; }
+            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); grid-auto-rows: 150px; }
+            .lb-image-wrap { padding: 80px 10px; }
+            .lb-prev { left: 8px; } .lb-next { right: 8px; }
+            .lb-thumbs { max-width: 100%; }
+            .lb-footer { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="cursor-dot"></div>
+<div class="cursor-outline"></div>
+
+<nav class="top-bar">
+    <a href="dashboard.html" class="logo-link">
+        <img src="logo.png" alt="IPAK Logo" style="width: 80px;">
+    </a>
+    <div class="header-actions">
+        <a href="dashboard.html" style="text-decoration: none;">
+            <i class="fas fa-arrow-left user-icon" title="Back to Dashboard"></i>
+        </a>
+        <i class="fas fa-user-circle user-icon" title="My Profile"></i>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<div class="wrapper">
+    <div class="container">
+        <div class="gallery-grid">
+            
+            <div class="event-card" onclick="openLightbox('iftaar')" style="cursor:pointer">
+                <span class="photo-count" id="count-iftaar">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-moon event-icon"></i>
+                    <span class="year-pill">Ramadan</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Iftaar Gathering</div>
+                    <div class="card-desc">Community iftaar dinner.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('independence')" style="cursor:pointer">
+                <span class="photo-count" id="count-independence">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-flag event-icon"></i>
+                    <span class="year-pill">14 Aug</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Independence Day</div>
+                    <div class="card-desc">Flag hoisting and national celebration.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('smashChamps')" style="cursor:pointer">
+                <span class="photo-count" id="count-smashChamps">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-trophy event-icon"></i>
+                    <span class="year-pill">Sports</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">IPAK Smash Champs</div>
+                    <div class="card-desc">Competitive sports tournament.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('leadership')" style="cursor:pointer">
+                <span class="photo-count" id="count-leadership">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-users-viewfinder event-icon"></i>
+                    <span class="year-pill">Session</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Leadership Series</div>
+                    <div class="card-desc">Executive training and alignment.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('mangoDay')" style="cursor:pointer">
+                <span class="photo-count" id="count-mangoDay">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-lemon event-icon"></i>
+                    <span class="year-pill">Event</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Mango Day</div>
+                    <div class="card-desc">Celebrating the season of mangoes together.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('petpak')" style="cursor:pointer">
+                <span class="photo-count" id="count-petpak">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-building event-icon"></i>
+                    <span class="year-pill">Launch</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">PETPAK Inauguration</div>
+                    <div class="card-desc">Official opening ceremony.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('plantation')" style="cursor:pointer">
+                <span class="photo-count" id="count-plantation">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-seedling event-icon"></i>
+                    <span class="year-pill">CSR</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Plantation Drive</div>
+                    <div class="card-desc">Eco-friendly tree planting initiative.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('rescue1122')" style="cursor:pointer">
+                <span class="photo-count" id="count-rescue1122">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-kit-medical event-icon"></i>
+                    <span class="year-pill">Training</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Rescue 1122</div>
+                    <div class="card-desc">Safety and emergency response training.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+            <div class="event-card" onclick="openLightbox('winning')" style="cursor:pointer">
+                <span class="photo-count" id="count-winning">0 Photos</span>
+                <div class="card-top">
+                    <i class="fas fa-handshake event-icon"></i>
+                    <span class="year-pill">Event</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Winning Together</div>
+                    <div class="card-desc">Annual collaborative achievement ceremony.</div>
+                </div>
+                <i class="fas fa-arrow-right arrow-icon"></i>
+            </div>
+
+        </div>
+
+        <footer>&copy; 2026 IPAK PORTAL | MEDIA CENTER</footer>
+    </div>
+</div>
+
+<div class="lightbox-overlay" id="lightbox">
+    <div class="lb-header">
+        <div>
+            <div class="lb-title" id="lb-title">Event Name</div>
+            <div class="lb-subtitle" id="lb-subtitle">IPAK MOMENTS</div>
+        </div>
+        
+        <div class="lb-top-actions">
+            <button class="lb-btn lb-btn-download" id="lb-download" onclick="forceDownload(event)">
+                <i class="fas fa-download"></i> Download
+            </button>
+            <button class="lb-close" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="lb-image-wrap">
+        <button class="lb-nav lb-prev" onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+        <div class="lb-spinner" id="lb-spinner"></div>
+        
+        <iframe class="lb-iframe" id="lb-iframe" src="" allow="autoplay; fullscreen" onload="mediaLoaded()"></iframe>
+        
+        <div class="lb-empty" id="lb-empty" style="display:none">
+            <i class="fas fa-image"></i>
+            <p>Is event mein abhi koi photo ya video nahi hai</p>
+        </div>
+        <button class="lb-nav lb-next" onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <div class="lb-footer">
+        <div class="lb-counter">
+            Media <span id="lb-current">1</span> of <span id="lb-total">1</span>
+        </div>
+        <div class="lb-thumbs" id="lb-thumbs"></div>
+        <div class="lb-keys"><kbd>←</kbd> <kbd>→</kbd> Navigate &nbsp;|&nbsp; <kbd>Esc</kbd> Close</div>
+    </div>
+</div>
+
+<script>
+const eventsData = {
+    mangoDay: {
+        title: "Mango Day",
+        subtitle: "IPAK Moments",
+        photos: [
+            "https://drive.google.com/thumbnail?id=1nokDdeyCJpCcRx2-VtRmtL--atb8ELvR&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1Atw6VEcPUNNJX5z5BxnXyKe4XeJDWQHt&sz=w1200",
+            "https://drive.google.com/thumbnail?id=16Wzwg2e_5mzzslrCft2CYpjaSoPTPwrQ&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1TvSrxn3DW6mEavpLKvyXzi2x5WLQ6Wij&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1fg7R4-zPkRO-C9BRb4gElD9VkL5oQ8xA&sz=w1200",
+            "https://drive.google.com/thumbnail?id=19_bnggWr4XML9NMa9d8ebl7OEi3pNUJ6&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1l_wEDoWlkYnrKzzMkdVx1n-fwGCn24tq&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1EFeX3k1HfJVzS7zCyuP2H7-2dqhHfQw0&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1oUgnDbx3Ptmq8k_DGM2VUwZZ1w-ZttDt&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1HrPnYjTb1tRruAjHW4kebrqBlPIwDHn6&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1eYS-j3VpbGl3LB96k_RWxA05HaETA6oc&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ag8djess169ITgRJyOQNkKfqeKv1KSR6&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1fq2IZY1EhOtzL4EDKR5-TAUwl4iizYJz&sz=w1200",
+            "https://drive.google.com/thumbnail?id=18HjtQ8fw3HndukmNSYCX8PHhDY5GXWWy&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1pfkvqRRb4wpKvu9X5fU-zRugR9HchPqB&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1Xts3Vf4lcUaibdmB7FeVTXYatbsxuryb&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1EbsjYQf9Wo3Shu7KxxFXOl_TBy0eTKxi&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1QIjaBK-NrYE09jljA0I99K8_50CzBPtT&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1pyNPp1feaUxYv6H9am-3NvjaDus9RY-7&sz=w1200",
+            "https://drive.google.com/thumbnail?id=11KdNLp2v3x8ma1D7i0zAIlOfj3bJEa4m&sz=w1200",
+            "https://drive.google.com/thumbnail?id=14EmEMfrkILCa2DL_RlWoN47UcA0UTsIB&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ccQm9NG5hldFTA0M3z9kzPmyffhON5lQ&sz=w1200",
+            "https://drive.google.com/thumbnail?id=11ItX9bYtJWtN106erv50V-c3hJQS4lfF&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ZDh0JZzdp42ZfF2K5c7G7J_c5oeUukhL&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1aHYoz_LCtVCNu0XXxPJze88ti7iEu8rK&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1geuBVB6owv8PyfAV1ymGizzhIUVclZnd&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1XpYoPJi7fxEtrRfbSmHeVPXanZP7VWOd&sz=w1200"
+        ]
+    },
+    rescue1122: {
+        title: "Rescue 1122 Training",
+        subtitle: "HSE Moments",
+        photos: [
+            "https://drive.google.com/thumbnail?id=1KhdmmKNe5qLPQT_fxMX0RktEo3e_qyaU&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ZfrsUabydsC92Xvx08Zn9MOQBpsqpyXW&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1LbY4dwmp3r6VE4NnN09S3m8H7ghiRQnc&sz=w1200",
+            "https://drive.google.com/thumbnail?id=13A3sQmpNDOgcSjbm9IBXxCfAA9xYlvgt&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1Y3PHIIRA1WIKy5cHCLdJKlcw56lhsPM5&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ksnEExdgokHHXKl0D2vs8tdqAoflZdZm&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1jDQEJXAHyFzT6m1E8nsgLLCwrDxktiRs&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1gLRk5PM-L8MpTx0mV44cx3QgP0BM0Dtm&sz=w1200",
+            "https://drive.google.com/thumbnail?id=18PfaJiX7x36KmcZO3FuwKnCde7f0vgSH&sz=w1200",
+            "https://drive.google.com/thumbnail?id=12Z4Nk9AeFXLx2KFnGKU3X2o31mi1yI0X&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1mLurf4neppM65rAURowBug5aWsg0unbj&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ALiTkha9kowW4NrI9PY4cPcswFnwjQly&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1xuFHPqcFxT2iSOPqHeoljaTyiZ_13Fwm&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1xHcZHzP98Xmny160EIVo0ELHb61-qHMi&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1QDKwCnd-GkbjPKKPVV2VC5IvdZVv0nN5&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1oRWYJ8v0ctdRpPtpZC5KIoFv7lk3qj4I&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1-26zjzTjAa5FOuMq-t9w9_ECcgTSbazm&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1PE48hF_FD6_jV1wfL3-_KKy0pXIdptU1&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1OlB8I3bHnYHLOaHMxoGZwt-YeeJZpQFI&sz=w1200",
+            "https://drive.google.com/thumbnail?id=15EVIe7_bu_b4aPmtyihZm6QC83Pdn3PE&sz=w1200",
+            "https://drive.google.com/thumbnail?id=12HOY6PhSV0pBUlT4g3vI4KtAYPlL5Wzp&sz=w1200",
+            "https://drive.google.com/thumbnail?id=13mMULs-gkM62mE5LgvlNhCNEsaAjsjva&sz=w1200"
+        ]
+    },
+    winning: {
+        title: "Winning Together",
+        subtitle: "IPAK Moments",
+        photos: [
+            "https://drive.google.com/thumbnail?id=1Xg9LfWOzcFPCg_OcWd3_aawZ-SlbG1oq&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1unXSm9Rx7cLNMWQF9fA46QE7vCNZrOPP&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1FRUTfZzlMZiD_C5teVMDXPz6XgLE6Jd_&sz=w1200"
+        ]
+    },
+    petpak: {
+        title: "PETPAK Inauguration",
+        subtitle: "Launch Ceremony",
+        photos: [
+            "https://drive.google.com/thumbnail?id=1v51eCEc049zGKHIYG02RPXxRMinhC0WL&sz=w1200",
+            "https://drive.google.com/thumbnail?id=12R3nWfGjQwKp9rOZQLTZdq0F2A5c9bMp&sz=w1200",
+            "https://drive.google.com/thumbnail?id=19gKoLBQzqkOrQQj6kMwiAzpR1IQsCty9&sz=w1200",
+            "https://drive.google.com/thumbnail?id=19X8a4ygAbl3YKBTimF8BPSL3wxf7JKe5&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1Rj54lzpRckTteQewtGQyBWTYsL78d8N9&sz=w1200",
+            "https://drive.google.com/thumbnail?id=15oYZbV190SL_BjWK_oHwECpMFbJQRXRW&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1YiaN9e_8B2WBqer6dRLWS8p5fbxPFg_t&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1g40IGQTsJdAmR9GXGr8wuh_5xzLkMN93&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1O0qrCk3yid9OVfplu3b9k96OgpbuQ0fV&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1iPZ2eWf8o1_TKem0amyqbILhtuutBQki&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1PGbBzPPQoOLh_GNz6vf1xHXwTHPUDiiJ&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1LWL3pl4xxPUiInDtXz5NlehwuREaWoIi&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1rwHOAOlJWrFB51ifrA7_pCH-l_LyejdM&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ueOP5abRsb0qNpXYs6z1zp552_kZIw5Y&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1ID6MYNJz7V7PfHAuO_P8CQx1hP3tueZ0&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1R8CWayhgvhZKyHu7QpMpQgCdT0lH3XQy&sz=w1200",
+            "https://drive.google.com/thumbnail?id=11QQTvaVMiH2W9dPf3Sd7c0VhI5R24NG_&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1SGNL4JXTc5gqkn8zF-JZMy33Go9AdpUk&sz=w1200",
+            "https://drive.google.com/thumbnail?id=11iefNRQ1XYQ20CHQrBIk9pieQZh4CMVe&sz=w1200"
+        ]
+    },
+    leadership: {
+        title: "Leadership Series",
+        subtitle: "Executive Session",
+        photos: [
+            "https://drive.google.com/thumbnail?id=15zwd8943Jvej1ZZWMga5V7LO8Emhcpk8&sz=w1200"
+        ]
+    },
+    smashChamps: {
+        title: "IPAK Smash Champs",
+        subtitle: "Sports Event",
+        photos: [
+            "https://drive.google.com/thumbnail?id=18jL5dfbM9-OoJbP9aOdymcMgy6Z4e7IO&sz=w1200"
+        ]
+    },
+    plantation: {
+        title: "Plantation Drive",
+        subtitle: "CSR Activity",
+        photos: [
+            "https://drive.google.com/thumbnail?id=1ZB1KSwMcqCD5_s7vcxfUIpKZE0OroNn7&sz=w1200"
+        ]
+    },
+    independence: {
+        title: "Independence Day",
+        subtitle: "14th August Celebration",
+        photos: [
+            "https://drive.google.com/thumbnail?id=1JvjDx1tVhhWBb_gXbUDZnIR-UBvPlESB&sz=w1200",
+            "https://drive.google.com/thumbnail?id=1IFOIfESC3QboxKr3pW0PtyUIC9NvgXb0&sz=w1200"
+        ]
+    },
+    iftaar: {
+        title: "Iftaar Gathering",
+        subtitle: "Ramadan Celebration",
+        photos: [
+            "https://drive.google.com/thumbnail?id=10G9Vt-yKIQwSv4RRNHDPdS3nxHmVcNMc&sz=w1200"
+        ]
+    }
+};
+
+let currentEvent = null;
+let currentIndex = 0;
+
+window.addEventListener('DOMContentLoaded', () => {
+    Object.keys(eventsData).forEach(key => {
+        const count = eventsData[key].photos.length;
+        const el = document.getElementById('count-' + key);
+        if (el) {
+            el.textContent = count > 0 ? count + ' Media' : 'Coming Soon';
+        }
+    });
+});
+
+function openLightbox(eventKey) {
+    const event = eventsData[eventKey];
+    if (!event) return;
+
+    currentEvent = event;
+    currentIndex = 0;
+
+    document.getElementById('lb-title').textContent = event.title;
+    document.getElementById('lb-subtitle').textContent = event.subtitle;
+
+    const overlay = document.getElementById('lightbox');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    if (event.photos.length === 0) {
+        document.getElementById('lb-iframe').style.display = 'none';
+        document.getElementById('lb-empty').style.display = 'block';
+        document.getElementById('lb-thumbs').innerHTML = '';
+        document.getElementById('lb-current').textContent = '0';
+        document.getElementById('lb-total').textContent = '0';
+        document.getElementById('lb-download').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('lb-iframe').style.display = 'block';
+    document.getElementById('lb-empty').style.display = 'none';
+    document.getElementById('lb-download').style.display = 'flex';
+
+    buildThumbnails();
+    loadSlide(0);
+}
+
+function buildThumbnails() {
+    const thumbsEl = document.getElementById('lb-thumbs');
+    thumbsEl.innerHTML = '';
+    currentEvent.photos.forEach((src, i) => {
+        const img = document.createElement('img');
+        img.className = 'lb-thumb' + (i === 0 ? ' active' : '');
+        img.src = src; 
+        img.alt = 'Thumb ' + (i+1);
+        img.onclick = () => loadSlide(i);
+        thumbsEl.appendChild(img);
+    });
+}
+
+function loadSlide(index) {
+    currentIndex = index;
+    const photos = currentEvent.photos;
+    const iframeEl = document.getElementById('lb-iframe');
+    const spinner = document.getElementById('lb-spinner');
+
+    iframeEl.classList.add('fading');
+    spinner.style.display = 'block';
+
+    setTimeout(() => {
+        const currentUrl = photos[currentIndex];
+        
+        // Extract Google Drive ID to generate native player URL
+        const match = currentUrl.match(/id=([^&]+)/);
+        if (match && match[1]) {
+            const fileId = match[1];
+            iframeEl.src = `https://drive.google.com/file/d/${fileId}/preview`;
+        } else {
+            iframeEl.src = currentUrl;
+        }
+
+        document.getElementById('lb-current').textContent = currentIndex + 1;
+        document.getElementById('lb-total').textContent = photos.length;
+        
+        document.querySelectorAll('.lb-thumb').forEach((t, i) => {
+            t.classList.toggle('active', i === currentIndex);
+        });
+        
+        const activeThumb = document.querySelectorAll('.lb-thumb')[currentIndex];
+        if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }, 300);
+}
+
+function mediaLoaded() {
+    document.getElementById('lb-spinner').style.display = 'none';
+    document.getElementById('lb-iframe').classList.remove('fading');
+}
+
+function changeSlide(dir) {
+    if (!currentEvent || currentEvent.photos.length === 0) return;
+    const total = currentEvent.photos.length;
+    loadSlide((currentIndex + dir + total) % total);
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+    document.getElementById('lb-iframe').src = '';
+    document.getElementById('lb-iframe').style.display = 'none';
+}
+
+function forceDownload(event) {
+    event.preventDefault();
+    if (!currentEvent || currentEvent.photos.length === 0) return;
+
+    const currentUrl = currentEvent.photos[currentIndex];
+    let downloadUrl = currentUrl;
+
+    // Use user-requested "direct click pay download" behavior 
+    if (currentUrl.includes('drive.google.com')) {
+        const match = currentUrl.match(/id=([^&]+)/);
+        if (match && match[1]) {
+            const fileId = match[1];
+            downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        }
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = downloadUrl;
+    document.body.appendChild(iframe);
+
+    setTimeout(() => {
+        document.body.removeChild(iframe);
+    }, 5000);
+}
+
+document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('lightbox').classList.contains('active')) return;
+    if (e.key === 'ArrowRight') changeSlide(1);
+    if (e.key === 'ArrowLeft') changeSlide(-1);
+    if (e.key === 'Escape') closeLightbox();
+});
+
+document.getElementById('lightbox').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+
+// Cursor
+const dot = document.querySelector('.cursor-dot');
+const outline = document.querySelector('.cursor-outline');
+window.addEventListener('mousemove', (e) => {
+    dot.style.left = e.clientX + 'px';
+    dot.style.top = e.clientY + 'px';
+    outline.animate({ left: e.clientX + 'px', top: e.clientY + 'px' }, { duration: 400, fill: "forwards" });
+});
+document.querySelectorAll('a, .event-card, button').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+});
+
+function logout() { window.location.href = "index.html"; }
+</script>
+</body>
+</html>

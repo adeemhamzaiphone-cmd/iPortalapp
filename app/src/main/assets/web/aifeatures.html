@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPAK Portal - Fullscreen Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --navy: #203265;
+            --lime: #A8C500;
+            --bg-light: #F4F7FB;
+            --surface: #FFFFFF;
+            --text-dark: #111827;
+            --text-muted: #6B7280;
+            --border-soft: #E5E7EB;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 20px 40px -5px rgba(32, 50, 101, 0.1), 0 10px 15px -5px rgba(32, 50, 101, 0.05);
+            --shadow-tour: 0 40px 80px -10px rgba(32, 50, 101, 0.25);
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            background-image: radial-gradient(circle at 100% 0%, rgba(168, 197, 0, 0.08) 0%, transparent 50%),
+                              radial-gradient(circle at 0% 100%, rgba(32, 50, 101, 0.08) 0%, transparent 50%);
+            height: 100vh; width: 100vw; display: flex; overflow: hidden;
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+        }
+
+        .main-content {
+            flex-grow: 1; display: flex; flex-direction: column;
+            position: relative; overflow: hidden; z-index: 10;
+            width: 100%; height: 100%;
+        }
+
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; transform: scale(1.05); pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            background: transparent;
+        }
+        .slide.active { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+        .slide-title { font-size: 4.5rem; font-weight: 800; margin-bottom: 20px; color: var(--navy); letter-spacing: -2px; text-align: center; }
+        .slide-desc { font-size: 1.5rem; color: var(--text-muted); text-align: center; max-width: 700px; line-height: 1.6;}
+
+        /* Intro Screensaver */
+        .screensaver-logo-container { margin-bottom: 50px; perspective: 1000px; }
+        .screensaver-logo {
+            width: 350px; height: auto; animation: elegantFloat 6s ease-in-out infinite;
+            filter: drop-shadow(0 20px 30px rgba(32, 50, 101, 0.15));
+        }
+        @keyframes elegantFloat {
+            0%, 100% { transform: translateY(0) rotateX(0) scale(1); filter: drop-shadow(0 20px 30px rgba(32, 50, 101, 0.15)); }
+            50% { transform: translateY(-20px) rotateX(5deg) scale(1.03); filter: drop-shadow(0 30px 45px rgba(168, 197, 0, 0.25)); }
+        }
+        .portal-details { display: flex; gap: 25px; margin-top: 40px; flex-wrap: wrap; justify-content: center; animation: fadeInUp 1.5s ease-out forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .detail-item {
+            background: rgba(255,255,255,0.7); border: 1px solid var(--border-soft); backdrop-filter: blur(10px);
+            padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; font-weight: 600; color: var(--navy);
+            display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm);
+        }
+        .detail-item i { color: var(--lime); font-size: 1.3rem; }
+
+        .instruction {
+            position: absolute; bottom: 40px; text-align: center; width: 100%;
+            color: var(--text-muted); font-size: 1rem; font-weight: 500; letter-spacing: 1px;
+            animation: pulseText 2s infinite;
+        }
+        .instruction kbd { background: var(--surface); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border-soft); box-shadow: var(--shadow-sm); color: var(--navy); font-weight: 700; margin: 0 5px;}
+        @keyframes pulseText { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        /* Feature Tour Styles */
+        .tour-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        
+        .tour-step {
+            position: absolute; display: flex; flex-direction: column; align-items: center;
+            opacity: 0; transform: translateY(40px) scale(0.95); transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none; text-align: center;
+        }
+        .tour-step.active { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+        .obj-box {
+            background: var(--surface); border: 1px solid var(--border-soft);
+            padding: 60px 80px; border-radius: 30px; max-width: 800px; box-shadow: var(--shadow-lg);
+        }
+        .obj-box h2 { 
+            color: var(--navy); font-size: 2.8rem; margin-bottom: 30px; 
+            display: flex; align-items: center; justify-content: center; gap: 15px; font-weight: 800; letter-spacing: -1px;
+        }
+        .obj-box h2 i { color: var(--lime); }
+        .obj-box p { font-size: 1.4rem; line-height: 1.7; color: var(--text-muted); font-weight: 400; }
+
+        .sample-card {
+            background: var(--surface); border-radius: 24px; padding: 40px; width: 420px; color: var(--navy); text-align: left; position: relative;
+            border: 1px solid var(--border-soft); box-shadow: var(--shadow-tour); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .tour-step.active .sample-card.zoom-in { transform: scale(1.4); box-shadow: 0 50px 100px -15px rgba(32, 50, 101, 0.3); }
+        
+        .blood-tag { position: absolute; top: 30px; right: 30px; background: #FEF2F2; color: #EF4444; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; }
+        .sample-card h3 { font-size: 1.8rem; margin-bottom: 5px; font-weight: 800;}
+        .sample-card p { color: var(--lime); font-weight: 700; margin-bottom: 30px; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .data-row { background: #F9FAFB; padding: 16px 20px; border-radius: 14px; font-size: 0.95rem; font-weight: 600; display: flex; justify-content: space-between; border: 1px solid var(--border-soft); margin-bottom: 12px; color: var(--navy); }
+        .data-row span { color: var(--text-muted); font-weight: 500; font-size: 0.85rem; }
+
+        .contact-btn {
+            display: flex; align-items: center; justify-content: center; gap: 12px; padding: 18px; 
+            background: #F3F4F6; color: var(--navy); border-radius: 14px; font-weight: 700; 
+            border: 1px solid var(--border-soft); margin-top: 30px; position: relative; transition: 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .highlight-call .contact-btn { background: var(--navy); border-color: var(--navy); color: var(--surface); transform: scale(1.15); z-index: 10; box-shadow: 0 20px 40px rgba(32, 50, 101, 0.4); }
+        .highlight-call .contact-btn i { color: var(--lime); }
+        
+        .highlight-text {
+            position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%);
+            color: var(--navy); font-weight: 800; white-space: nowrap; font-size: 1.1rem;
+            opacity: 0; transition: 0.5s 0.3s; background: var(--surface); padding: 10px 25px; border-radius: 50px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15); border: 1px solid var(--border-soft);
+        }
+        .highlight-call .highlight-text { opacity: 1; bottom: -65px; }
+
+        /* --- SUCCESS BOX STYLES --- */
+        .success-box {
+            background: var(--surface); border: 3px solid var(--lime); padding: 60px 80px; border-radius: 30px; max-width: 800px;
+            box-shadow: 0 30px 60px rgba(168, 197, 0, 0.15); text-align: center;
+        }
+        .success-icon { font-size: 5rem; color: var(--lime); margin-bottom: 25px; }
+        .success-box h2 { color: var(--navy); font-size: 2.8rem; margin-bottom: 20px; font-weight: 800; letter-spacing: -1px; }
+        .success-box p { font-size: 1.3rem; line-height: 1.7; color: var(--text-muted); font-weight: 500; }
+
+        /* --- KIOSK POLICY ANIMATION STYLES --- */
+        .kiosk-container { position: relative; margin: 0 auto 30px; display: flex; flex-direction: column; align-items: center; }
+        .kiosk-screen-frame {
+            width: 260px; height: 380px; background: var(--navy); border-radius: 20px;
+            border: 12px solid #e2e8f0; box-shadow: var(--shadow-lg);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; position: relative; z-index: 2;
+        }
+        .kiosk-stand-neck { width: 70px; height: 90px; background: #cbd5e1; z-index: 1; margin-top: -15px; border-radius: 0 0 10px 10px;}
+        .kiosk-base { width: 240px; height: 20px; background: #94a3b8; border-radius: 20px 20px 0 0; }
+        
+        .kiosk-doc {
+            background: white; border: 3px solid var(--lime); width: 85%; height: 65%; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; box-shadow: 0 0 20px rgba(168, 197, 0, 0.4);
+        }
+        .kiosk-doc i { font-size: 3rem; color: var(--navy); margin-bottom: 10px; }
+        .tour-step.active .kiosk-doc { animation: dropIn 1.2s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes dropIn { 0% { transform: translateY(-200px) scale(2); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+
+
+        /* --- BLOOD BANK ANIMATION STYLES --- */
+        .blood-journey {
+            position: relative; width: 450px; height: 120px; display: flex; align-items: center; margin: 0 auto 30px;
+        }
+        .journey-start { position: absolute; left: 0; font-size: 3.5rem; color: #EF4444; z-index: 2; opacity: 0; }
+        .journey-end { position: absolute; right: 0; font-size: 4.5rem; color: var(--navy); z-index: 2; }
+        .journey-path {
+            position: absolute; left: 40px; right: 60px; height: 6px; background: var(--border-soft); z-index: 1;
+            overflow: hidden; border-radius: 5px;
+        }
+        .journey-path-fill { width: 100%; height: 100%; background: var(--lime); transform: translateX(-100%); }
+        .drop-mover { position: absolute; left: 0; z-index: 3; font-size: 3.5rem; color: #EF4444; opacity: 0; }
+
+        .tour-step.active .journey-path-fill { animation: fillPath 1.5s 0.5s forwards ease-in-out; }
+        .tour-step.active .drop-mover { animation: moveDrop 1.5s 0.5s forwards ease-in-out, fadeDrop 0.2s 1.9s forwards; }
+        .tour-step.active .journey-end { animation: pulseHospital 0.6s 1.9s forwards; }
+
+        @keyframes moveDrop {
+            0% { transform: translateX(0) scale(1); opacity: 1; }
+            50% { transform: translateX(180px) scale(1.3) translateY(-20px); opacity: 1;}
+            100% { transform: translateX(360px) scale(0.8) translateY(0); opacity: 1;}
+        }
+        @keyframes fadeDrop { to { opacity: 0; } }
+        @keyframes fillPath { to { transform: translateX(0); } }
+        @keyframes pulseHospital {
+            0% { transform: scale(1); color: var(--navy); }
+            50% { transform: scale(1.3); color: #EF4444; text-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+            100% { transform: scale(1.1); color: var(--lime); text-shadow: 0 0 20px rgba(168, 197, 0, 0.4); }
+        }
+
+        /* --- CAR DASHBOARD ANIMATION STYLES (AUDIO) --- */
+        .car-container { position: relative; width: 550px; height: 220px; margin: 0 auto 30px; display: flex; align-items: flex-end; justify-content: center; }
+        .car-dash { 
+            width: 100%; height: 150px; background: #1f2937; border-radius: 60px 60px 0 0; 
+            position: relative; display: flex; justify-content: center; align-items: center; 
+            border-top: 6px solid #374151; box-shadow: var(--shadow-lg); 
+        }
+        .car-screen { 
+            width: 260px; height: 120px; background: #111827; border-radius: 12px; 
+            border: 6px solid #4b5563; display: flex; justify-content: center; align-items: center; 
+            overflow: hidden; position: relative; 
+        }
+        .car-steering { 
+            position: absolute; left: 40px; bottom: -40px; width: 160px; height: 160px; 
+            border: 20px solid #374151; border-radius: 50%; z-index: 5; 
+        }
+        .car-audio-player {
+            background: var(--surface); width: 90%; padding: 10px; border-radius: 8px;
+            display: flex; align-items: center; gap: 12px; opacity: 0;
+            box-shadow: 0 0 20px rgba(168, 197, 0, 0.3);
+        }
+        .car-audio-player img { width: 45px; height: 45px; border-radius: 5px; }
+        .car-audio-player .eq { color: var(--lime); font-size: 1.2rem; margin-left: auto; display: flex; gap: 3px; align-items: flex-end; height: 20px;}
+        .eq span { width: 4px; background: var(--lime); border-radius: 2px; animation: bounceEq 1s infinite alternate; }
+        .eq span:nth-child(2) { animation-delay: 0.2s; } .eq span:nth-child(3) { animation-delay: 0.4s; }
+        
+        .tour-step.active .car-audio-player { animation: popInScreen 1.2s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        
+        @keyframes popInScreen { 0% { transform: scale(3) translateY(-100px) rotate(10deg); opacity: 0; } 100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; } }
+        @keyframes bounceEq { 0% { height: 5px; } 100% { height: 20px; } }
+
+        /* --- MARKETPLACE HANDSHAKE ANIMATION --- */
+        .deal-animation { position: relative; height: 120px; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; width: 400px; }
+        .deal-user-1 { position: absolute; left: 0; font-size: 3.5rem; color: var(--navy); opacity: 0; }
+        .deal-user-2 { position: absolute; right: 0; font-size: 3.5rem; color: var(--navy); opacity: 0; }
+        .deal-box { position: absolute; font-size: 2.5rem; color: var(--lime); opacity: 0; }
+        .deal-handshake { position: absolute; font-size: 5.5rem; color: #25D366; opacity: 0; }
+
+        .tour-step.active .deal-user-1 { animation: slideUser1 1s 0.5s forwards ease-in-out, fadeOutDeal 0.2s 2.2s forwards; }
+        .tour-step.active .deal-user-2 { animation: slideUser2 1s 0.5s forwards ease-in-out, fadeOutDeal 0.2s 2.2s forwards; }
+        .tour-step.active .deal-box { animation: dropBox 0.5s 1.2s forwards ease-out, fadeOutDeal 0.2s 2.2s forwards; }
+        .tour-step.active .deal-handshake { animation: popHandshake 0.6s 2.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        @keyframes slideUser1 { 0% { left: 0; opacity: 0; } 100% { left: 100px; opacity: 1; } }
+        @keyframes slideUser2 { 0% { right: 0; opacity: 0; } 100% { right: 100px; opacity: 1; } }
+        @keyframes dropBox { 0% { transform: translateY(-50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOutDeal { to { opacity: 0; transform: scale(0.8); } }
+        @keyframes popHandshake { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 15px 25px rgba(37, 211, 102, 0.3)); } }
+
+        /* Demo Images & Grids */
+        .policy-grid-demo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; }
+        .policy-card-demo { background: #F9FAFB; border: 1px solid var(--border-soft); color: var(--navy); font-size: 0.95rem; font-weight: 600; padding: 18px; border-radius: 14px; display: flex; align-items: center; gap: 14px; }
+        .policy-card-demo i { color: var(--navy); font-size: 1.2rem; width: 20px; text-align: center;}
+        .market-img-demo { width: 100%; height: 180px; background: url('https://images.unsplash.com/photo-1526304640152-d4619684e484?w=400') center/cover; border-radius: 14px; margin-bottom: 25px; border: 1px solid var(--border-soft); }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 5px; background: var(--lime); width: 0%; transition: width 0.4s ease; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="main-content">
+        
+        <!-- Slide 0: Intro -->
+        <div class="slide active" id="slide-0">
+            <div class="screensaver-logo-container">
+                <img src="logo.png" alt="IPAK Portal Logo" class="screensaver-logo" onerror="this.src='https://via.placeholder.com/260x100.png?text=IPAK+Logo'">
+            </div>
+            <h1 class="slide-title">Welcome to IPAK Portal</h1>
+            <p class="slide-desc">A centralized, elegantly designed hub empowering employees with secure access to corporate services, policies, and community tools.</p>
+            
+            <div class="portal-details">
+                <div class="detail-item"><i class="fas fa-bolt"></i> Real-time Connectivity</div>
+                <div class="detail-item"><i class="fas fa-shield-alt"></i> Secure Document Kiosk</div>
+                <div class="detail-item"><i class="fas fa-users"></i> Employee Centric</div>
+            </div>
+            <div class="instruction"><kbd>Right-Click</kbd> Next Slide &nbsp;|&nbsp; <kbd>Left-Click</kbd> Previous Slide</div>
+        </div>
+
+        <!-- Slide 1: Policies -->
+        <div class="slide" id="slide-1">
+            <div class="tour-container">
+                <div class="tour-step" id="policy-step-1">
+                    <div class="obj-box">
+                        <h2><i class="fas fa-file-contract"></i> Policy Center</h2>
+                        <p>To provide a secure, easily accessible, and centralized digital repository for all IPAK HR policies, ensuring transparency and compliance across the organization.</p>
+                    </div>
+                </div>
+                <div class="tour-step" id="policy-step-2">
+                    <h2 style="margin-bottom: 50px; color: var(--text-muted); font-weight: 400; font-size: 2rem;">Interactive <strong style="color:var(--navy); font-weight: 800;">Policy Dashboard</strong></h2>
+                    <div class="sample-card" id="policy-demo-card" style="width: 520px;">
+                        <h3 style="margin-bottom: 20px;">Document Access</h3>
+                        <div class="policy-grid-demo">
+                            <div class="policy-card-demo"><i class="fas fa-sitemap"></i> Grading Structure</div>
+                            <div class="policy-card-demo"><i class="fas fa-vial"></i> Substance Testing</div>
+                            <div class="policy-card-demo"><i class="fas fa-user-tie"></i> Dress Code</div>
+                            <div class="policy-card-demo"><i class="fas fa-laptop-code"></i> Laptop Security</div>
+                        </div>
+                        <div class="contact-btn" id="policy-action-btn">
+                            <i class="fas fa-file-pdf"></i> Open Secure Document
+                            <div class="highlight-text"><i class="fas fa-shield-alt"></i> Watermarked & Protected!</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tour-step" id="policy-step-3">
+                    <div class="success-box" style="padding-top: 30px;">
+                        <div class="kiosk-container">
+                            <div class="kiosk-screen-frame">
+                                <div class="kiosk-doc">
+                                    <i class="fas fa-file-signature"></i>
+                                    <div style="font-weight: 700; color: var(--navy); font-size: 0.8rem;">IPAK Policy</div>
+                                </div>
+                            </div>
+                            <div class="kiosk-stand-neck"></div>
+                            <div class="kiosk-base"></div>
+                        </div>
+                        <h2>Policy Deployed</h2>
+                        <p>Document seamlessly loaded onto the interactive Kiosk. You are now fully aware and compliant with IPAK policies directly from the shop floor.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Blood Bank -->
+        <div class="slide" id="slide-2">
+            <div class="tour-container">
+                <div class="tour-step" id="blood-step-1">
+                    <div class="obj-box">
+                        <h2><i class="fas fa-hand-holding-medical"></i> Blood Bank Hub</h2>
+                        <p>To bridge humanity with lifesaving care by providing an instant, accessible, and secure emergency blood donor network for all IPAK personnel.</p>
+                    </div>
+                </div>
+                <div class="tour-step" id="blood-step-2">
+                    <h2 style="margin-bottom: 50px; color: var(--text-muted); font-weight: 400; font-size: 2rem;">Live <strong style="color:var(--navy); font-weight: 800;">Personnel Card</strong> Scan</h2>
+                    <div class="sample-card" id="blood-demo-card">
+                        <div class="blood-tag"><i class="fas fa-droplet"></i> O+</div>
+                        <h3>Ali Ahmed</h3>
+                        <p>Senior Engineer</p>
+                        <div class="data-row" style="margin-top: 30px;"><span><i class="fas fa-map-marker-alt"></i> LOCATION</span> IPAK Plant</div>
+                        <div class="data-row"><span><i class="fas fa-fingerprint"></i> EMP ID</span> 90210</div>
+                        <div class="contact-btn">
+                            <i class="fas fa-phone-alt"></i> +92 300 1234567
+                            <div class="highlight-text"><i class="fas fa-bolt"></i> Secure Comms Enabled!</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tour-step" id="blood-step-3">
+                    <div class="success-box">
+                        <div class="blood-journey">
+                            <i class="fas fa-tint drop-mover"></i>
+                            <i class="fas fa-tint journey-start"></i>
+                            <div class="journey-path"><div class="journey-path-fill"></div></div>
+                            <i class="fas fa-hospital journey-end"></i>
+                        </div>
+                        <h2>Mission Accomplished</h2>
+                        <p>Call connected instantly! The blood donor has been coordinated, and blood is arranged at the hospital for the patient.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Audio Library -->
+        <div class="slide" id="slide-3">
+             <div class="tour-container">
+                <div class="tour-step" id="audio-step-1">
+                    <div class="obj-box">
+                        <h2><i class="fas fa-headphones"></i> Audio Library</h2>
+                        <p>To provide a curated collection of audiobooks and resources, fostering continuous learning and personal development for the IPAK team.</p>
+                    </div>
+                </div>
+                <div class="tour-step" id="audio-step-2">
+                    <h2 style="margin-bottom: 50px; color: var(--text-muted); font-weight: 400; font-size: 2rem;">Featured <strong style="color:var(--navy); font-weight: 800;">Audiobook</strong></h2>
+                    <div class="sample-card" id="audio-demo-card" style="width: 440px;">
+                        <h3 style="text-align: center; margin-bottom: 30px;">Think and Grow Rich</h3>
+                        <div style="background: #F9FAFB; padding: 20px; border-radius: 16px; border: 1px solid var(--border-soft); display: flex; align-items: center; gap: 20px;">
+                            <img src="https://i.scdn.co/image/ab67616d00001e028b3a7a97686ecdf0661ffef6" alt="Cover" style="width: 80px; height: 80px; border-radius: 10px; box-shadow: var(--shadow-sm);">
+                            <div style="flex-grow: 1;">
+                                <div style="font-weight: 800; font-size: 1.1rem; color: var(--navy);">Think and Grow Rich</div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">Napoleon Hill</div>
+                            </div>
+                        </div>
+                        <div class="contact-btn" id="audio-play-btn">
+                            <i class="fas fa-play"></i> Play Now
+                            <div class="highlight-text"><i class="fas fa-volume-up"></i> Seamless Streaming!</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tour-step" id="audio-step-3">
+                    <div class="success-box" style="padding-top: 30px;">
+                        <div class="car-container">
+                            <div class="car-dash">
+                                <div class="car-steering"></div>
+                                <div class="car-screen">
+                                    <div class="car-audio-player">
+                                        <img src="https://i.scdn.co/image/ab67616d00001e028b3a7a97686ecdf0661ffef6" alt="Cover">
+                                        <div>
+                                            <div style="font-size:0.75rem; font-weight:700; color:var(--navy);">Playing...</div>
+                                            <div style="font-size:0.65rem; color:var(--text-muted);">Think and Grow Rich</div>
+                                        </div>
+                                        <div class="eq"><span></span><span></span><span></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <h2>Listen Anywhere</h2>
+                        <p>Access audiobooks and podcasts anywhere! Whether commuting in your car, or relaxing at home, continuous learning is always with you.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Marketplace -->
+        <div class="slide" id="slide-4">
+             <div class="tour-container">
+                <div class="tour-step" id="market-step-1">
+                    <div class="obj-box">
+                        <h2><i class="fas fa-store"></i> Marketplace</h2>
+                        <p>An internal, secure classifieds platform for IPAK employees to buy and sell personal items seamlessly within the corporate community.</p>
+                    </div>
+                </div>
+                <div class="tour-step" id="market-step-2">
+                    <h2 style="margin-bottom: 50px; color: var(--text-muted); font-weight: 400; font-size: 2rem;">Live <strong style="color:var(--navy); font-weight: 800;">Listing Item</strong></h2>
+                    <div class="sample-card" id="market-demo-card">
+                        <div class="blood-tag" style="background: var(--lime); color: var(--navy); border: none;">PKR 150,000</div>
+                        <div class="market-img-demo"></div>
+                        <h3>iPhone 13 Pro</h3>
+                        <p style="color: var(--text-muted);">Electronics</p>
+                        <div class="data-row"><span><i class="fas fa-user-tag"></i> SELLER</span> Ali Ahmed (IT)</div>
+                        <div class="contact-btn" id="market-action-btn">
+                            <i class="fab fa-whatsapp"></i> Connect on WhatsApp
+                            <div class="highlight-text"><i class="fas fa-comments"></i> Auto-Drafted Message!</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tour-step" id="market-step-3">
+                    <div class="success-box" style="border-color: #25D366; box-shadow: 0 30px 60px rgba(37, 211, 102, 0.15);">
+                        <div class="deal-animation">
+                            <i class="fas fa-user-tag deal-user-1"></i>
+                            <i class="fas fa-box-open deal-box"></i>
+                            <i class="fas fa-user deal-user-2"></i>
+                            <i class="fas fa-handshake deal-handshake"></i>
+                        </div>
+                        <h2>Deal Finalized!</h2>
+                        <p>Connected directly via WhatsApp, negotiated the terms seamlessly, and the item is now yours.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- GLOBAL PRESENTATION STATE MACHINE ---
+        const steps = [
+            { slide: 0, tour: 0, highlight: false }, // Intro
+            
+            { slide: 1, tour: 1, highlight: false, prefix: 'policy' }, // Policy Obj
+            { slide: 1, tour: 2, highlight: false, prefix: 'policy' }, // Policy Card
+            { slide: 1, tour: 2, highlight: true, prefix: 'policy' },  // Policy Highlight
+            { slide: 1, tour: 3, highlight: false, prefix: 'policy' }, // Policy Success (Kiosk Animation)
+            
+            { slide: 2, tour: 1, highlight: false, prefix: 'blood' }, // Blood Obj
+            { slide: 2, tour: 2, highlight: false, prefix: 'blood' }, // Blood Card
+            { slide: 2, tour: 2, highlight: true, prefix: 'blood' },  // Blood Highlight
+            { slide: 2, tour: 3, highlight: false, prefix: 'blood' }, // Blood Success (Drop Animation)
+            
+            { slide: 3, tour: 1, highlight: false, prefix: 'audio' }, // Audio Obj
+            { slide: 3, tour: 2, highlight: false, prefix: 'audio' }, // Audio Card
+            { slide: 3, tour: 2, highlight: true, prefix: 'audio' },  // Audio Highlight
+            { slide: 3, tour: 3, highlight: false, prefix: 'audio' }, // Audio Success (Car Animation)
+            
+            { slide: 4, tour: 1, highlight: false, prefix: 'market' }, // Market Obj
+            { slide: 4, tour: 2, highlight: false, prefix: 'market' }, // Market Card
+            { slide: 4, tour: 2, highlight: true, prefix: 'market' },  // Market Highlight
+            { slide: 4, tour: 3, highlight: false, prefix: 'market' }  // Market Success (Handshake Animation)
+        ];
+
+        let currentStepIdx = 0;
+
+        function renderState() {
+            const state = steps[currentStepIdx];
+            
+            // Progress Bar
+            const progress = ((currentStepIdx) / (steps.length - 1)) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Slides
+            document.querySelectorAll('.slide').forEach((el, idx) => {
+                if (idx === state.slide) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+
+            // Tour Steps & Highlights
+            const allPrefixes = ['policy', 'blood', 'audio', 'market'];
+            
+            allPrefixes.forEach(pref => {
+                const step1 = document.getElementById(`${pref}-step-1`);
+                const step2 = document.getElementById(`${pref}-step-2`);
+                const step3 = document.getElementById(`${pref}-step-3`);
+                const card = document.getElementById(`${pref}-demo-card`);
+                
+                if (state.prefix === pref) {
+                    if (state.tour === 1) {
+                        if(step1) step1.classList.add('active');
+                        if(step2) step2.classList.remove('active');
+                        if(step3) step3.classList.remove('active');
+                        if(card) { card.classList.remove('zoom-in'); card.classList.remove('highlight-call'); }
+                    } else if (state.tour === 2) {
+                        if(step1) step1.classList.remove('active');
+                        if(step2) step2.classList.add('active');
+                        if(step3) step3.classList.remove('active');
+                        
+                        if(card) {
+                            setTimeout(() => card.classList.add('zoom-in'), 50);
+                            if (state.highlight) card.classList.add('highlight-call');
+                            else card.classList.remove('highlight-call');
+                        }
+                    } else if (state.tour === 3) {
+                        if(step1) step1.classList.remove('active');
+                        if(step2) step2.classList.remove('active');
+                        
+                        // Small delay for CSS animations to reset properly when navigating back and forth
+                        if(step3) {
+                            step3.classList.remove('active');
+                            setTimeout(() => { step3.classList.add('active'); }, 50);
+                        }
+                        if(card) { card.classList.remove('zoom-in'); card.classList.remove('highlight-call'); }
+                    }
+                } else {
+                    if(step1) step1.classList.remove('active');
+                    if(step2) step2.classList.remove('active');
+                    if(step3) step3.classList.remove('active');
+                    if(card) { card.classList.remove('zoom-in'); card.classList.remove('highlight-call'); }
+                }
+            });
+        }
+
+        // Action Handlers
+        function goNext() {
+            if (currentStepIdx < steps.length - 1) {
+                currentStepIdx++;
+                renderState();
+            }
+        }
+
+        function goPrev() {
+            if (currentStepIdx > 0) {
+                currentStepIdx--;
+                renderState();
+            }
+        }
+
+        // MOUSE CLICK BINDINGS
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault(); goNext();
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.button === 0) goPrev();
+        });
+
+        // KEYBOARD BINDINGS
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') goNext();
+            if (e.key === 'ArrowLeft' || e.key === 'Backspace') goPrev();
+        });
+
+        // Init
+        renderState();
+    </script>
+</body>
+</html>

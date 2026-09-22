@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPAK Portal - Audio Library</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --navy: #203265;
+            --lime: #A8C500;
+            --white: #FFFFFF;
+            --med-grey: #9C9C9C;
+            --light-grey: #D4D4D4;
+            --bg-color: #F5F7FA;
+            --border-light: #E5E7EB; /* Added for standard header */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; cursor: none; }
+        
+        body { 
+            color: var(--navy); 
+            background: var(--bg-color); 
+            min-height: 100vh; 
+            overflow-x: hidden;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor-dot {
+            width: 8px; height: 8px; background: var(--lime);
+            position: fixed; pointer-events: none; z-index: 10000;
+            border-radius: 50%; box-shadow: 0 0 10px var(--lime);
+        }
+        .cursor-outline {
+            width: 40px; height: 40px; border: 2px solid var(--navy);
+            position: fixed; pointer-events: none; z-index: 9999;
+            border-radius: 50%; transition: width 0.2s, height 0.2s, background 0.2s;
+        }
+        body.hovering .cursor-outline {
+            width: 60px; height: 60px; border-color: var(--lime);
+            background: rgba(168, 197, 0, 0.1);
+        }
+
+        /* --- STANDARD HEADER STYLES --- */
+        .top-bar {
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid var(--border-light);
+            height: 64px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 32px;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+        }
+
+        .logo-link { text-decoration: none; display: flex; align-items: center; }
+        .logo-link img { width: 100px; height: auto; transition: opacity 0.3s ease; }
+        .logo-link:hover img { opacity: 0.8; }
+
+        .header-actions { display: flex; align-items: center; gap: 16px; }
+        
+        .user-icon { font-size: 22px; color: var(--navy); transition: color 0.3s ease; cursor: pointer; }
+        .user-icon:hover { color: var(--lime); }
+
+        .logout-btn {
+            padding: 6px 16px; background: transparent;
+            border: 1px solid var(--border-light); color: var(--navy);
+            border-radius: 6px; font-weight: 500; font-size: 13px;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .logout-btn:hover { border-color: var(--navy); background: #f3f4f6; }
+
+        /* --- LAYOUT --- */
+        .wrapper { padding-top: 120px; padding-bottom: 50px; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* --- SEARCH BAR (FULL WIDTH) --- */
+        .search-container { display: flex; justify-content: center; margin-bottom: 40px; }
+        .search-box {
+            width: 100%; /* Full Lamba Kar Diya Hai */
+            padding: 18px 30px; /* Thora bada kiya taake acha lagay */
+            border-radius: 50px; border: 1.5px solid var(--light-grey);
+            outline: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            font-size: 1.1rem; color: var(--navy);
+        }
+        .search-box::placeholder { color: var(--med-grey); }
+        .search-box:focus { border-color: var(--lime); box-shadow: 0 0 15px rgba(168, 197, 0, 0.15); }
+
+        /* --- AUDIO SECTION --- */
+        .category-title {
+            color: var(--navy); font-size: 1rem; margin: 20px 0 30px 0;
+            text-transform: uppercase; letter-spacing: 2px; font-weight: 700;
+            display: flex; align-items: center; gap: 15px;
+        }
+        .category-title::after { content: ''; flex-grow: 1; height: 1px; background: var(--light-grey); }
+
+        /* --- GRID SYSTEM FOR MULTIPLE BOOKS --- */
+        .audio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+        }
+
+        /* --- THE DUAL COLOR JUGAAD --- */
+        .spotify-wrapper {
+            width: 100%;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1.5px solid var(--lime); 
+            border-radius: 12px;
+            padding: 8px; 
+            background: linear-gradient(135deg, var(--white) 0%, #f9f9f9 100%); 
+            position: relative;
+            box-shadow: 0 8px 15px rgba(32, 50, 101, 0.05);
+        }
+
+        /* Book Title Style */
+        .book-title {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--navy);
+            margin: 5px 0 10px 0;
+            transition: 0.3s;
+            letter-spacing: 0.5px;
+        }
+        
+        .spotify-wrapper iframe {
+            filter: sepia(100%) hue-rotate(190deg) saturate(350%) brightness(55%) contrast(1.1); 
+            border-radius: 8px !important;
+            transition: 0.5s;
+            display: block; 
+            background: var(--navy); 
+        }
+        
+        .spotify-wrapper:hover iframe {
+            filter: sepia(0%) hue-rotate(0deg) saturate(100%) brightness(100%) contrast(1);
+        }
+
+        .spotify-wrapper:hover {
+            border-color: var(--navy);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(32, 50, 101, 0.15);
+        }
+
+        .spotify-wrapper:hover .book-title {
+            color: var(--lime); 
+        }
+
+        footer { text-align: center; margin-top: 80px; padding: 40px 0; color: var(--med-grey); font-size: 0.8rem; letter-spacing: 2px; }
+
+        @media (max-width: 768px) {
+            body { cursor: auto; }
+            .cursor-dot, .cursor-outline { display: none; }
+            .top-bar { padding: 0 20px; }
+            .audio-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <nav class="top-bar">
+        <a href="dashboard.html" class="logo-link">
+            <img src="logo.png" alt="IPAK Logo">
+        </a>
+        <div class="header-actions">
+            <a href="dashboard.html" style="text-decoration: none;">
+                <i class="fas fa-arrow-left user-icon" title="Back to Dashboard"></i>
+            </a>
+            
+            <i class="fas fa-user-circle user-icon" title="My Profile"></i>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <div class="container">
+
+            <div class="search-container">
+                <input type="text" id="bookSearch" class="search-box" placeholder="Search for books...">
+            </div>
+
+            <div class="category-title"><i class="fas fa-headphones-alt" style="color: var(--lime);"></i> Featured Audiobooks Collection</div>
+            
+            <div class="audio-grid" id="audioContainer">
+                
+                <div class="spotify-wrapper">
+                    <div class="book-title">Think and Grow Rich</div>
+                    <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/album/1OhFcrYUfgEN4u6FffYFIe?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+
+                <div class="spotify-wrapper">
+                    <div class="book-title">Rich Dad Poor Dad</div>
+                    <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/68QIMi3O4RCqLB5hX495sq?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+
+                <div class="spotify-wrapper">
+                    <div class="book-title">Psychology 101</div>
+                    <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/album/5MIjkMBop7WqfrNZMO4Guj?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+
+                <div class="spotify-wrapper">
+                    <div class="book-title">The Power of Subconscious Mind</div>
+                    <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/album/2bQDr4saIJ6pIqiqvYnVNA?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+
+            </div>
+            <footer>© 2026 IPAK PORTAL | SECURE ACCESS</footer>
+        </div>
+    </div>
+
+    <script>
+        function logout() { window.location.href = "index.html"; }
+
+        // Smooth Cursor Logic
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX; const posY = e.clientY;
+            dot.style.left = `${posX}px`; dot.style.top = `${posY}px`;
+            outline.animate({ left: `${posX - 20}px`, top: `${posY - 20}px` }, { duration: 400, fill: "forwards" });
+        });
+
+        // Hover effect trigger for custom cursor
+        document.querySelectorAll('a, button, input, iframe, .spotify-wrapper').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+
+        // Live Search Filter Logic
+        document.getElementById('bookSearch').addEventListener('input', function() {
+            let filterValue = this.value.toLowerCase();
+            let bookCards = document.querySelectorAll('.spotify-wrapper');
+
+            bookCards.forEach(function(card) {
+                let titleText = card.querySelector('.book-title').innerText.toLowerCase();
+                if(titleText.includes(filterValue)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPAK HelpDesk - Employee Services</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy: #1B2640; 
+            --lime: #9CB500; 
+            --white: #FFFFFF;
+            --med-grey: #6B7280; 
+            --light-bg: #F9FAFB; 
+            --emergency-red: #EF4444;
+            --whatsapp-green: #25D366;
+            --linkedin-blue: #0077b5;
+            --border-light: #E5E7EB;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--navy);
+            -webkit-font-smoothing: antialiased; 
+            -moz-osx-font-smoothing: grayscale;
+            overflow-y: auto;
+        }
+
+        /* --- HEADER --- */
+        .top-bar {
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid var(--border-light);
+            height: 64px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 32px;
+            position: fixed; top: 0; width: 100%; z-index: 100;
+        }
+
+        .logo-link img { width: 100px; height: auto; transition: opacity 0.3s ease; }
+        .logo-link:hover img { opacity: 0.8; }
+
+        .header-actions { display: flex; align-items: center; gap: 16px; }
+        
+        .user-icon { font-size: 22px; color: var(--navy); transition: color 0.3s ease; cursor: pointer; text-decoration: none;}
+        .user-icon:hover { color: var(--lime); }
+
+        .logout-btn {
+            padding: 6px 16px; background: transparent;
+            border: 1px solid var(--border-light); color: var(--navy);
+            border-radius: 6px; font-weight: 500; font-size: 13px;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .logout-btn:hover { border-color: var(--navy); background: #f3f4f6; }
+
+        /* --- WRAPPER --- */
+        .wrapper {
+            padding-top: 100px; 
+            padding-bottom: 40px; 
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%; max-width: 1100px;
+            margin: 0 auto; padding: 0 24px;
+        }
+
+        /* --- BENTO GRID --- */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 Equal Columns */
+            gap: 20px; 
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* --- BIG CENTERED CARDS --- */
+        .big-center-card {
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: 16px; 
+            padding: 40px 20px; 
+            text-decoration: none;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                        border-color 0.4s ease;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02); 
+            cursor: pointer;
+        }
+
+        .big-center-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(156, 181, 0, 0.5);
+            box-shadow: 0 20px 25px -5px rgba(27, 38, 64, 0.05), 
+                        0 8px 10px -6px rgba(27, 38, 64, 0.05); 
+            z-index: 10;
+        }
+
+        .big-icon-wrapper {
+            background: rgba(156, 181, 0, 0.1);
+            width: 80px; height: 80px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+            transition: all 0.4s ease;
+        }
+        
+        .big-center-card:hover .big-icon-wrapper {
+            background: var(--lime);
+            transform: scale(1.1);
+        }
+
+        .big-icon-wrapper i { font-size: 2.5rem; color: var(--lime); transition: color 0.4s ease;}
+        .big-center-card:hover .big-icon-wrapper i { color: var(--white); }
+
+        .card-title { font-weight: 700; color: var(--navy); font-size: 1.2rem; margin-bottom: 8px; }
+        .card-desc { color: var(--med-grey); font-size: 0.9rem; font-weight: 400; line-height: 1.4; max-width: 80%; }
+
+        /* --- STANDARD SMALL CARDS (For Modals) --- */
+        .card {
+            background: var(--white); border: 1px solid var(--border-light); border-radius: 12px; 
+            padding: 20px; text-decoration: none; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-height: 140px; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card:hover {
+            transform: translateY(-6px); border-color: rgba(156, 181, 0, 0.5);
+            box-shadow: 0 20px 25px -5px rgba(27, 38, 64, 0.05); z-index: 10;
+        }
+        .card-icon { font-size: 24px; color: var(--navy); margin-bottom: 12px; transition: color 0.3s ease; }
+        .card:hover .card-icon { color: var(--lime); }
+        .small-card-title { font-weight: 600; color: var(--navy); font-size: 15px; margin-bottom: 4px; }
+        .small-card-desc { color: var(--med-grey); font-size: 13px; font-weight: 400; line-height: 1.4; }
+        .arrow-icon {
+            position: absolute; bottom: 20px; right: 20px; color: var(--lime); opacity: 0;
+            transform: translateX(-8px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); font-size: 14px;
+        }
+        .card:hover .arrow-icon { opacity: 1; transform: translateX(0); }
+        .stops-badge {
+            position: absolute; top: 16px; right: 16px; background: var(--lime); color: var(--navy);
+            padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+        }
+
+        /* --- ACTION BUTTONS (BOTTOM) --- */
+        .action-area {
+            display: flex; justify-content: center; gap: 16px; margin-top: 40px; flex-wrap: wrap;
+            animation: slideUp 1s ease-out;
+        }
+        .support-btn {
+            padding: 14px 28px; border-radius: 50px; font-weight: 600; font-size: 14px;
+            display: flex; align-items: center; gap: 10px; border: none; cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-whatsapp { background: var(--whatsapp-green); color: white; box-shadow: 0 4px 10px rgba(37,211,102,0.2); }
+        .btn-whatsapp:hover { background: #1ebc57; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(37,211,102,0.3); }
+        .btn-email { background: var(--navy); color: white; box-shadow: 0 4px 10px rgba(27,38,64,0.1); }
+        .btn-email:hover { background: var(--lime); color: var(--navy); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(156,181,0,0.2); }
+
+        footer {
+            text-align: center; margin-top: auto; padding-top: 40px;
+            color: #9CA3AF; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+        }
+
+        @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* --- DASHBOARD STYLE MODALS --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(27, 38, 64, 0.85); z-index: 100000; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px); animation: fadeInModal 0.3s ease;
+        }
+        .modal-container {
+            background: var(--light-bg); width: 90%; max-width: 1200px; height: 90vh; border-radius: 12px;
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            transform: scale(0.95); animation: scaleInModal 0.3s ease forwards; border: 1px solid var(--border-light);
+        }
+        .modal-header {
+            background: var(--white); padding: 15px 24px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 2px solid var(--lime);
+        }
+        .modal-header h3 { color: var(--navy); font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+        .close-btn { background: none; border: none; font-size: 20px; color: var(--emergency-red); cursor: pointer; transition: 0.3s; }
+        .close-btn:hover { transform: scale(1.2) rotate(90deg); color: #ff0000; }
+        
+        .modal-body { flex-grow: 1; width: 100%; height: 100%; overflow-y: auto; background: var(--light-bg); }
+        .modal-body-padding { padding: 24px; }
+        #appViewer { width: 100%; height: 100%; border: none; background: var(--white); display: block; }
+
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleInModal { from { transform: scale(0.95); } to { transform: scale(1); } }
+
+        /* --- MESS MENU TABLE --- */
+        .menu-table-container { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-light); background: var(--white); }
+        .menu-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .menu-table th { background: var(--navy); color: var(--white); padding: 14px 16px; font-weight: 500; font-size: 13px; position: sticky; top: 0; z-index: 2;}
+        .menu-table td { padding: 14px 16px; border-bottom: 1px solid var(--border-light); color: var(--navy); font-size: 13px; }
+        .menu-table tr:hover { background: var(--light-bg); }
+        .sweet-badge { background: rgba(156, 181, 0, 0.15); color: #7a8d00; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block; }
+
+        /* --- ROUTE TIMELINE --- */
+        .pop-meta { display: flex; gap: 24px; margin-bottom: 24px; font-size: 13px; color: var(--med-grey); border-bottom: 1px solid var(--border-light); padding-bottom: 16px; flex-wrap: wrap;}
+        .pop-meta span { display: flex; align-items: center; gap: 8px; }
+        .pop-meta i { color: var(--navy); opacity: 0.7; }
+
+        .timeline-clean { position: relative; padding-left: 24px; }
+        .timeline-clean::before { content: ''; position: absolute; left: 6px; top: 8px; bottom: 0; width: 2px; background: var(--border-light); }
+        .stop-item { position: relative; margin-bottom: 20px; color: var(--navy);}
+        .stop-item:last-child { margin-bottom: 0; }
+        .stop-item::before { content: ''; position: absolute; left: -23px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--white); border: 2px solid var(--lime); box-shadow: 0 0 0 2px rgba(156, 181, 0, 0.15); }
+        .stop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;}
+        .stop-name { font-weight: 600; font-size: 13px; }
+        .stop-time { font-size: 12px; color: var(--navy); font-weight: 600; background: var(--white); border: 1px solid var(--border-light); padding: 2px 8px; border-radius: 4px;}
+
+        .shift-badges { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .shift-pill { font-size: 11px; padding: 4px 8px; border-radius: 4px; background: var(--white); border: 1px solid var(--border-light); color: var(--med-grey); display: flex; align-items: center; gap: 6px; font-weight: 500; }
+        .shift-pill i { color: var(--navy); opacity: 0.6; }
+        .shift-out-alert { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 600; color: var(--emergency-red); background: #fef2f2; padding: 4px 8px; border-radius: 4px; border: 1px solid #fecaca; }
+
+        .modal-body::-webkit-scrollbar { width: 6px; }
+        .modal-body::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 10px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .modal-container { width: 95%; height: 95vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-bar">
+        <a href="dashboard.html" class="logo-link">
+            <img src="logo.png" alt="Logo">
+        </a>
+        <div class="header-actions">
+            <a href="dashboard.html" class="user-icon" title="Back to Dashboard">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <i class="fas fa-user-circle user-icon" title="My Profile"></i>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <div class="container">
+
+            <!-- MAIN BENTO GRID (3 Equal Columns) -->
+            <div class="bento-grid">
+                
+                <div class="big-center-card" onclick="openModalGroup('feedbackGridModal')">
+                    <div class="big-icon-wrapper">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div class="card-title">Feedback Forms</div>
+                    <div class="card-desc">Share your suggestions or report issues via forms</div>
+                </div>
+
+                <div class="big-center-card" onclick="openModalGroup('messMenuModal')">
+                    <div class="big-icon-wrapper">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <div class="card-title">Daily Mess Menu</div>
+                    <div class="card-desc">View today's meals and the complete monthly plan</div>
+                </div>
+
+                <div class="big-center-card" onclick="openModalGroup('transportGridModal')">
+                    <div class="big-icon-wrapper">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="card-title">Transport Routes</div>
+                    <div class="card-desc">View all pick & drop network data and timings</div>
+                </div>
+
+            </div>
+
+            <!-- ACTION AREA (Bottom Support Buttons) -->
+            <div class="action-area">
+                <button class="support-btn btn-whatsapp" onclick="openWhatsApp()">
+                    <i class="fab fa-whatsapp" style="font-size: 18px;"></i> WhatsApp Support
+                </button>
+                <button class="support-btn btn-email" onclick="openEmail()">
+                    <i class="fas fa-envelope" style="font-size: 16px;"></i> Email Support
+                </button>
+            </div>
+
+            <footer>&copy; 2026 IPAK PORTAL | DESIGNED BY TEAM HR</footer>
+        </div>
+    </div>
+
+    <!-- 1. IFRAME MODAL (For Forms) -->
+    <div id="contentModal" class="modal-overlay" style="z-index: 100005;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Loading...</h3>
+                <button class="close-btn" onclick="closeModalGroup('contentModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <iframe id="modalIframe" src="" allowfullscreen="true"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. FEEDBACK FORMS GRID MODAL -->
+    <div id="feedbackGridModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 1000px; height: auto; max-height: 90vh;">
+            <div class="modal-header">
+                <h3>Feedback Forms</h3>
+                <button class="close-btn" onclick="closeModalGroup('feedbackGridModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body modal-body-padding">
+                <div class="bento-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                    
+                    <div class="card" onclick="openIframe('IPAK | CPAK', 'https://docs.google.com/forms/d/e/1FAIpQLScuIvju-2HULZ6ngfwCzgCypQnq5NVWP2tCZNvT7nXZkPZrfQ/viewform?embedded=true')">
+                        <i class="fas fa-industry card-icon"></i>
+                        <div>
+                            <div class="small-card-title">IPAK | CPAK</div>
+                            <div class="small-card-desc">Submit feedback for IPAK & CPAK facilities</div>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </div>
+
+                    <div class="card" onclick="openIframe('PETPAK | GPAK', 'https://docs.google.com/forms/d/e/1FAIpQLSdP8faxqah1YZfdHxY-VITqvb1efvrs_i9plILBSCFOWuRB4w/viewform?embedded=true')">
+                        <i class="fas fa-box card-icon"></i>
+                        <div>
+                            <div class="small-card-title">PETPAK | GPAK</div>
+                            <div class="small-card-desc">Submit feedback for PETPAK & GPAK facilities</div>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </div>
+
+                    <div class="card" onclick="openIframe('IPAK | KARACHI', 'https://docs.google.com/forms/d/e/1FAIpQLSf1hsYgSD9MXyLj1-3vRTVXkMqoqIGgXnysswE7M5m4rMc7Aw/viewform?embedded=true')">
+                        <i class="fas fa-city card-icon"></i>
+                        <div>
+                            <div class="small-card-title">IPAK | KARACHI</div>
+                            <div class="small-card-desc">Submit feedback for Karachi facility</div>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MESS MENU MODAL -->
+    <div id="messMenuModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h3>Monthly Mess Menu - April 2026</h3>
+                <button class="close-btn" onclick="closeModalGroup('messMenuModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body modal-body-padding">
+                <div class="menu-table-container">
+                    <table class="menu-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Main Menu</th>
+                                <th>Side (Raita/Salad)</th>
+                                <th>Sweet</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menuTableBody">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. TRANSPORT NETWORK GRID MODAL -->
+    <div id="transportGridModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Transport Network Data</h3>
+                <button class="close-btn" onclick="closeModalGroup('transportGridModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body modal-body-padding">
+                <div class="bento-grid" id="routeGrid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+                    <!-- JS Injected -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. TRANSPORT ROUTE TIMELINE POPUP -->
+    <div id="routePopup" class="modal-overlay" style="z-index: 100005;">
+        <div class="modal-container" style="max-width: 550px; height: auto; max-height: 85vh;">
+            <div class="modal-header">
+                <h3 id="pop-title" style="margin:0;">Route Name</h3>
+                <button class="close-btn" onclick="closeModalGroup('routePopup')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body modal-body-padding">
+                <div class="pop-meta">
+                    <span id="pop-vehicle"><i class="fas fa-van-shuttle"></i> Vehicle</span>
+                    <span id="pop-driver"><i class="fas fa-user-tie"></i> Driver</span>
+                    <span id="pop-contact"><i class="fas fa-phone"></i> Contact</span>
+                </div>
+                <div class="timeline-clean" id="pop-timeline">
+                    <!-- JS Injected -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openWhatsApp() { window.open('https://wa.me/923222818107', '_blank'); }
+        function openEmail() { window.location.href = 'mailto:hamza.farooq@ipak.com.pk'; }
+        function logout() { window.location.href = "index.html"; }
+
+        // --- DASHBOARD MODAL LOGIC ---
+        function openModalGroup(id) {
+            if(id === 'messMenuModal') renderMessMenu();
+            if(id === 'transportGridModal') renderTransportGrid();
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModalGroup(id) {
+            document.getElementById(id).style.display = 'none';
+            if(id === 'contentModal') document.getElementById('modalIframe').src = '';
+        }
+
+        function openIframe(title, url) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalIframe').src = url;
+            openModalGroup('contentModal');
+        }
+
+        // Close on outside click
+        window.onclick = (e) => { 
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
+                if(e.target.id === 'contentModal') document.getElementById('modalIframe').src = '';
+            }
+        }
+
+        // Keydown listener for escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+                document.getElementById('modalIframe').src = '';
+            }
+        });
+
+        // --- MESS MENU DATA[cite: 1] ---
+        const menuData = [
+            { date: "1-Apr-26", day: "Wednesday", main: "Mix Vegetable+Roti", side: "Mint Raita", sweet: "" },
+            { date: "2-Apr-26", day: "Thursday", main: "Dal Mash+Alu Tiki+Roti", side: "Mint Raita", sweet: "" },
+            { date: "3-Apr-26", day: "Friday", main: "Chicken Pulao", side: "Mint Raita", sweet: "Gud Rice" },
+            { date: "4-Apr-26", day: "Saturday", main: "Black Chana+Roti", side: "Salad", sweet: "" },
+            { date: "5-Apr-26", day: "Sunday", main: "Alu Chiken+Roti", side: "Salad", sweet: "" },
+            { date: "6-Apr-26", day: "Monday", main: "Chicken Green Masala+Roti", side: "Salad", sweet: "" },
+            { date: "7-Apr-26", day: "Tuesday", main: "Alu Matar Kari+Roti", side: "Salad", sweet: "" },
+            { date: "8-Apr-26", day: "Wednesday", main: "Kabab Masala+Roti", side: "Salad", sweet: "" },
+            { date: "9-Apr-26", day: "Thursday", main: "White Channa Egg+Roti", side: "Salad", sweet: "" },
+            { date: "10-Apr-26", day: "Friday", main: "Chicken Biryani", side: "Raita", sweet: "Mutanjan" },
+            { date: "11-Apr-26", day: "Saturday", main: "Mix Vegetable+Roti", side: "Mint Raita", sweet: "" },
+            { date: "12-Apr-26", day: "Sunday", main: "Dal Channa Fri+Roti", side: "Salad", sweet: "" },
+            { date: "13-Apr-26", day: "Monday", main: "Chicken Qorma+Roti", side: "Salad", sweet: "" },
+            { date: "14-Apr-26", day: "Tuesday", main: "Channa Pulao", side: "Mint Raita", sweet: "" },
+            { date: "15-Apr-26", day: "Wednesday", main: "Steam Rost+Mix Dal+Roti", side: "Mint Raita", sweet: "" },
+            { date: "16-Apr-26", day: "Thursday", main: "Mix Vegetable+Roti", side: "Mint Raita", sweet: "" },
+            { date: "17-Apr-26", day: "Friday", main: "Chicken Pulao", side: "Raita", sweet: "Zarda" },
+            { date: "18-Apr-26", day: "Saturday", main: "Black Chana+Roti", side: "Salad", sweet: "" },
+            { date: "19-Apr-26", day: "Sunday", main: "Alu Chiken+Roti", side: "Salad", sweet: "" },
+            { date: "20-Apr-26", day: "Monday", main: "Chicken Karahi+Roti", side: "Salad", sweet: "" },
+            { date: "21-Apr-26", day: "Tuesday", main: "Mix Vegetable+Roti", side: "Mint Raita", sweet: "" },
+            { date: "22-Apr-26", day: "Wednesday", main: "Chicken Qeema Matar+Roti", side: "Mint Raita", sweet: "" },
+            { date: "23-Apr-26", day: "Thursday", main: "Haleem+Khameeri Roti", side: "Garnish", sweet: "" },
+            { date: "24-Apr-26", day: "Friday", main: "Sindhi Biryani", side: "Raita", sweet: "Mutanjan" },
+            { date: "25-Apr-26", day: "Saturday", main: "Dal Channa+Roti", side: "Salad", sweet: "" },
+            { date: "26-Apr-26", day: "Sunday", main: "Alu Matar Kari+Roti", side: "Salad", sweet: "" },
+            { date: "27-Apr-26", day: "Monday", main: "Chicken Jalfrezi+Roti", side: "Salad", sweet: "" },
+            { date: "28-Apr-26", day: "Tuesday", main: "Channa Pulao", side: "Mint Raita", sweet: "" },
+            { date: "29-Apr-26", day: "Wednesday", main: "Chapli Kabab+Mix Dal+Roti", side: "Mint Raita", sweet: "" },
+            { date: "30-Apr-26", day: "Thursday", main: "White Channa Egg+Roti", side: "Salad", sweet: "" }
+        ];
+
+        function renderMessMenu() {
+            const tableBody = document.getElementById('menuTableBody');
+            tableBody.innerHTML = '';
+            menuData.forEach(item => {
+                const sweetHtml = item.sweet ? `<span class="sweet-badge">${item.sweet}</span>` : '-';
+                const row = `
+                    <tr>
+                        <td style="font-weight: 600;">${item.date}</td>
+                        <td>${item.day}</td>
+                        <td style="font-weight: 500;">${item.main}</td>
+                        <td>${item.side}</td>
+                        <td>${sweetHtml}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // --- TRANSPORT ROUTE DATA & LOGIC ---
+        const routesData = [
+            { id: 1, title: "Raiwind to PPAK", type: "General Shift", driver: "Shahzad", contact: "0305-4598250", vehicle: "LES 440 (Coaster)", shiftOut: "05:05 PM", isMultiShift: false, stops: [ { name: "IPAK", time: "07:00 AM" }, { name: "Raiwind Adda", time: "07:25 AM" }, { name: "Sabzi Mandi", time: "07:28 AM" }, { name: "LDA Chok", time: "07:55 AM" }, { name: "Nawab town", time: "08:00 AM" }, { name: "Ali town", time: "08:02 AM" }, { name: "Thokar Niaz Baig", time: "08:05 AM" }, { name: "PPAK Plant", time: "08:55 AM" } ] },
+            { id: 2, title: "Gajjumata to PPAK", type: "General Shift", driver: "Sameer", contact: "0303-8205214", vehicle: "LES 5992 (Grand Cabin)", shiftOut: "05:05 PM", isMultiShift: false, stops: [ { name: "Saroba Garden", time: "07:30 AM" }, { name: "Kanchi", time: "07:35 AM" }, { name: "Deffence Chowk", time: "07:42 AM" }, { name: "Walltan", time: "07:45 AM" }, { name: "Kot Lakhpat", time: "07:50 AM" }, { name: "Pindi Stop", time: "07:55 AM" }, { name: "Jinna Hospital", time: "08:00 AM" }, { name: "PPAK Plant", time: "08:55 AM" } ] },
+            { id: 3, title: "Sky Land to PPAK", type: "General Shift", driver: "Abdullah", contact: "0307-8807215", vehicle: "LES 6440 (Grand Cabin)", shiftOut: "05:05 PM", isMultiShift: false, stops: [ { name: "Sky Land", time: "07:25 AM" }, { name: "Main Rasheed Road", time: "07:38 AM" }, { name: "Taj Bagh", time: "07:39 AM" }, { name: "Shalimar", time: "07:50 AM" }, { name: "Sukh Naar", time: "07:51 AM" }, { name: "Bati Chowk", time: "08:06 AM" }, { name: "Saggian pul", time: "08:12 AM" }, { name: "Babo Sabo", time: "08:18 AM" }, { name: "PPAK Plant", time: "08:55 AM" } ] },
+            { id: 4, title: "SKP General", type: "General Shift", driver: "Asif", contact: "0302-3955759", vehicle: "LES 7871 (Coaster)", shiftOut: "05:05 PM", isMultiShift: false, stops: [ { name: "Ghazi Phatak", time: "08:15 AM" }, { name: "Kips College", time: "08:17 AM" }, { name: "SP Chowk", time: "08:22 AM" }, { name: "Jinnah Park", time: "08:27 AM" }, { name: "Batti Chowk", time: "08:32 AM" }, { name: "Gourmet Bakery", time: "08:38 AM" }, { name: "Housing Colony", time: "08:40 AM" }, { name: "Phatak", time: "08:50 AM" }, { name: "PPAK PLANT", time: "08:55 AM" } ] },
+            { id: 5, title: "SKP SP Chowk", type: "3 Shifts (8 Hrs)", driver: "Tariq", contact: "Admin", vehicle: "RNO 5885 (Coaster)", isMultiShift: true, stops: [ { name: "SP Chowk", morning: "06:10 AM", evening: "02:10 PM", night: "10:10 PM" }, { name: "Bihari colony", morning: "06:12 AM", evening: "02:12 PM", night: "10:12 PM" }, { name: "Dil chowk", morning: "06:16 AM", evening: "02:16 PM", night: "10:16 PM" }, { name: "Sadar chowk", morning: "06:25 AM", evening: "02:25 PM", night: "10:25 PM" }, { name: "Batti chowk", morning: "06:26 AM", evening: "02:26 PM", night: "10:26 PM" }, { name: "Interchange", morning: "06:35 AM", evening: "02:35 PM", night: "10:35 PM" }, { name: "PPAK Plant", morning: "06:45 AM", evening: "02:45 PM", night: "10:45 PM" } ] },
+            { id: 6, title: "Batti Chowk", type: "3 Shifts (8 Hrs)", driver: "Ejaz", contact: "Admin", vehicle: "LES 4075 (Coaster)", isMultiShift: true, stops: [ { name: "Batti Chowk", morning: "06:20 AM", evening: "02:20 PM", night: "10:20 PM" }, { name: "Gourmet Bakery", morning: "06:23 AM", evening: "02:23 PM", night: "10:23 PM" }, { name: "Housing Colony", morning: "06:26 AM", evening: "02:26 PM", night: "10:26 PM" }, { name: "Total Pump", morning: "06:28 AM", evening: "02:28 PM", night: "10:28 PM" }, { name: "Saleem Kot", morning: "06:30 AM", evening: "02:30 PM", night: "10:30 PM" }, { name: "Phatak", morning: "06:38 AM", evening: "02:38 PM", night: "10:38 PM" }, { name: "PPAK Plant", morning: "06:45 AM", evening: "02:45 PM", night: "10:45 PM" } ] },
+            { id: 7, title: "Ali town", type: "3 Shifts (8 Hrs)", driver: "Sharaf / Awais", contact: "0305-6696155", vehicle: "LES 7444 (Coaster)", isMultiShift: true, stops: [ { name: "Ali town Station", morning: "05:47 AM", evening: "01:36 PM", night: "09:47 PM" }, { name: "Thokar Niaz Bag", morning: "05:50 AM", evening: "01:40 PM", night: "09:50 PM" }, { name: "Scheme mor", morning: "06:00 AM", evening: "02:00 PM", night: "10:00 PM" }, { name: "Shera kot", morning: "06:05 AM", evening: "02:07 PM", night: "10:05 PM" }, { name: "Labor Colony", morning: "06:37 AM", evening: "02:37 PM", night: "10:37 PM" }, { name: "Plant", morning: "06:45 AM", evening: "02:45 PM", night: "10:45 PM" } ] },
+            { id: 8, title: "Harbanspura", type: "3 Shifts (8 Hrs)", driver: "wzaif / Shaban", contact: "0326-4323505", vehicle: "CBC 740 (Grand Cabin)", isMultiShift: true, stops: [ { name: "Dharmpura", morning: "05:40 AM", evening: "01:30 PM", night: "09:40 PM" }, { name: "Harbans pura", morning: "05:48 AM", evening: "01:38 PM", night: "09:52 PM" }, { name: "Shahdra", morning: "06:05 AM", evening: "01:55 PM", night: "10:12 PM" }, { name: "Kot A.Malik", morning: "06:10 AM", evening: "02:00 PM", night: "10:20 PM" }, { name: "PPAK Pant", morning: "06:45 AM", evening: "02:45 PM", night: "10:45 PM" } ] },
+            { id: 9, title: "SP Chowk (HRSG)", type: "3 Shifts (HRSG)", driver: "Abbas", contact: "0324-4134670", vehicle: "BSA 457 (BUS)", isMultiShift: true, stops: [ { name: "SP Chowk", morning: "05:50 AM", evening: "01:50 PM", night: "09:50 PM" }, { name: "Liaqat School", morning: "05:55 AM", evening: "01:55 PM", night: "09:55 PM" }, { name: "Batti Chowk", morning: "05:59 AM", evening: "01:59 PM", night: "09:59 PM" }, { name: "Interchange", morning: "06:10 AM", evening: "02:10 PM", night: "10:10 PM" }, { name: "Phatak", morning: "06:38 AM", evening: "02:38 PM", night: "10:38 PM" }, { name: "PPAK", morning: "06:45 AM", evening: "02:45 PM", night: "10:45 PM" } ] }
+        ];
+
+        function renderTransportGrid() {
+            const grid = document.getElementById('routeGrid');
+            grid.innerHTML = '';
+            routesData.forEach(route => {
+                const icon = route.isMultiShift ? 'fa-business-time' : 'fa-bus';
+                const cardHTML = `
+                    <div class="card" onclick="openRoutePopup(${route.id})">
+                        <span class="stops-badge">${route.stops.length} Stops</span>
+                        <i class="fas ${icon} card-icon"></i>
+                        <div>
+                            <div class="small-card-title">${route.title}</div>
+                            <div class="small-card-desc" style="margin-top: 8px;">
+                                <span style="display:inline-block; margin-bottom:6px; font-size:10px; padding:2px 6px; background: #f3f4f6; border-radius:4px; font-weight: 500;">${route.type}</span><br>
+                                <i class="fas fa-van-shuttle" style="width:14px;"></i> ${route.vehicle.split('(')[0]}<br>
+                                <i class="fas fa-user-tie" style="width:14px;"></i> ${route.driver}
+                            </div>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        function openRoutePopup(id) {
+            const route = routesData.find(r => r.id === id);
+            if(!route) return;
+
+            document.getElementById('pop-title').textContent = route.title;
+            document.getElementById('pop-vehicle').innerHTML = `<i class="fas fa-van-shuttle"></i> ${route.vehicle}`;
+            document.getElementById('pop-driver').innerHTML = `<i class="fas fa-user-tie"></i> ${route.driver}`;
+            document.getElementById('pop-contact').innerHTML = `<i class="fas fa-phone"></i> ${route.contact}`;
+
+            const timelineBox = document.getElementById('pop-timeline');
+            timelineBox.innerHTML = ''; 
+
+            route.stops.forEach((stop, index) => {
+                if(route.isMultiShift) {
+                    timelineBox.innerHTML += `
+                        <div class="stop-item">
+                            <div class="stop-header">
+                                <span class="stop-name">${stop.name}</span>
+                            </div>
+                            <div class="shift-badges">
+                                <div class="shift-pill"><i class="fas fa-sun"></i> ${stop.morning}</div>
+                                <div class="shift-pill"><i class="fas fa-cloud-sun"></i> ${stop.evening}</div>
+                                <div class="shift-pill"><i class="fas fa-moon"></i> ${stop.night}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let shiftOutAlert = (index === route.stops.length - 1 && route.shiftOut) 
+                        ? `<div class="shift-out-alert"><i class="far fa-clock"></i> Shift Out: ${route.shiftOut}</div>` 
+                        : '';
+                    timelineBox.innerHTML += `
+                        <div class="stop-item">
+                            <div class="stop-header">
+                                <span class="stop-name">${stop.name}</span>
+                                <span class="stop-time">${stop.time}</span>
+                            </div>
+                            ${shiftOutAlert}
+                        </div>
+                    `;
+                }
+            });
+
+            openModalGroup('routePopup');
+        }
+    </script>
+</body>
+</html>

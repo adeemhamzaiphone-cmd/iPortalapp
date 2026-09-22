@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace - Buy & Sell</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --navy: #203265;
+            --lime: #A8C500;
+            --white: #FFFFFF;
+            --med-grey: #9C9C9C;
+            --light-grey: #D4D4D4;
+            --bg-color: #F5F7FA;
+            --whatsapp-green: #25D366;
+            --danger: #ff4757;
+            --border-light: #E5E7EB;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            color: var(--navy); 
+            background: var(--bg-color); 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            cursor: none; 
+        }
+
+        /* Forces normal pointer on clickable items just in case */
+        input, button, select, a, textarea, .close-modal { cursor: pointer !important; }
+        input[type="text"], input[type="number"], input[type="tel"], textarea { cursor: text !important; }
+
+        /* CURSOR Z-INDEX FIXED (Set to 99999 so it stays above modal) */
+        .cursor-dot { width: 8px; height: 8px; background: var(--lime); position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; }
+        .cursor-outline { width: 40px; height: 40px; border: 2px solid var(--navy); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: 0.1s ease-out; }
+        body.hovering .cursor-outline { width: 60px; height: 60px; border-color: var(--lime); background: rgba(168, 197, 0, 0.1); }
+
+        .top-bar {
+            background: rgba(255, 255, 255, 0.98); border-bottom: 1px solid var(--border-light);
+            height: 64px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 32px; position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+        }
+
+        .logo-link { text-decoration: none; display: flex; align-items: center; }
+        .logo-link img { width: 100px; height: auto; transition: opacity 0.3s ease; }
+        .logo-link:hover img { opacity: 0.8; }
+
+        .header-actions { display: flex; align-items: center; gap: 16px; }
+        .user-icon, .admin-lock { font-size: 22px; color: var(--navy); transition: color 0.3s ease; cursor: pointer; }
+        .user-icon:hover, .admin-lock:hover { color: var(--lime); }
+        .admin-active { color: var(--danger) !important; filter: drop-shadow(0 0 5px rgba(255, 71, 87, 0.5)); }
+
+        .logout-btn {
+            padding: 6px 16px; background: transparent; border: 1px solid var(--border-light); color: var(--navy);
+            border-radius: 6px; font-weight: 500; font-size: 13px; transition: all 0.3s ease; cursor: pointer;
+        }
+        .logout-btn:hover { border-color: var(--navy); background: #f3f4f6; }
+
+        .wrapper { padding-top: 120px; padding-bottom: 50px; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        .page-header { text-align: center; margin-bottom: 40px; animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .page-header h1 { font-size: 2.5rem; color: var(--navy); }
+        .page-header p { color: var(--lime); letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; font-weight: 700; }
+
+        .controls-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+        .search-container { flex: 1; max-width: 500px; position: relative; }
+        .search-input { width: 100%; padding: 15px 25px; border-radius: 50px; border: 1px solid var(--light-grey); outline: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .search-input:focus { border-color: var(--lime); box-shadow: 0 0 15px rgba(168, 197, 0, 0.1); }
+
+        .sell-btn {
+            background: var(--lime); color: var(--navy); padding: 15px 30px; border-radius: 50px; font-weight: 700;
+            border: none; display: flex; align-items: center; gap: 10px; transition: 0.3s; box-shadow: 0 5px 15px rgba(168, 197, 0, 0.3);
+        }
+        .sell-btn:hover { transform: translateY(-3px); background: #96b000; }
+
+        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+
+        .item-card {
+            background: var(--white); border-radius: 20px; overflow: hidden; border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+        }
+        .item-card:hover { transform: translateY(-10px); border-color: var(--lime); box-shadow: 0 20px 40px rgba(32, 50, 101, 0.1); }
+
+        .delete-btn {
+            position: absolute; top: 10px; right: 10px; background: var(--danger); color: white;
+            width: 35px; height: 35px; border-radius: 50%; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); transition: 0.2s;
+        }
+        .delete-btn:hover { transform: scale(1.1); background: #d63031; }
+
+        .item-image { width: 100%; height: 200px; background: #eee; object-fit: cover; position: relative; }
+        .price-tag {
+            position: absolute; top: 15px; left: 15px; background: var(--lime); color: var(--navy);
+            padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .card-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .item-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; color: var(--navy); }
+        .item-category { font-size: 0.8rem; color: var(--med-grey); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .seller-info { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 0.85rem; color: #555; }
+        .seller-icon { color: var(--lime); }
+
+        .whatsapp-btn {
+            margin-top: auto; width: 100%; background: var(--whatsapp-green); color: white;
+            padding: 12px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: 600;
+            display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .whatsapp-btn:hover { background: #1ebe57; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3); }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(32, 50, 101, 0.8); backdrop-filter: blur(8px); z-index: 30000;
+            justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s;
+        }
+        .modal.show { display: flex; opacity: 1; }
+        
+        .modal-content {
+            background: var(--white); padding: 30px; width: 90%; max-width: 500px;
+            border-radius: 24px; position: relative; transform: translateY(20px); transition: transform 0.3s;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+        .modal.show .modal-content { transform: translateY(0); }
+        
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 24px; color: var(--med-grey); cursor: pointer; transition: 0.3s; }
+        .close-modal:hover { color: var(--navy); }
+
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; color: var(--navy); }
+        .form-input, .form-select { 
+            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--light-grey); 
+            outline: none; font-size: 1rem; color: var(--navy);
+        }
+        .form-input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(168, 197, 0, 0.1); }
+        
+        .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .file-input-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        .btn-file {
+            background-color: #f0f2f5; border: 2px dashed var(--light-grey); color: var(--med-grey);
+            padding: 15px; width: 100%; text-align: center; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s;
+        }
+        .btn-file:hover { border-color: var(--lime); color: var(--navy); background: rgba(168, 197, 0, 0.05); }
+
+        .submit-btn {
+            width: 100%; padding: 14px; background: var(--navy); color: white; border: none;
+            border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; transition: 0.3s;
+        }
+        .submit-btn:hover { background: var(--lime); color: var(--navy); }
+
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: var(--navy); color: #fff;
+            text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 100000;
+            left: 50%; bottom: 30px; transform: translateX(-50%); box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        @media (max-width: 768px) {
+            .cursor-dot, .cursor-outline { display: none; }
+            body { cursor: auto; }
+            .top-bar { padding: 0 20px; }
+            .controls-area { flex-direction: column; align-items: stretch; }
+            .market-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <nav class="top-bar">
+        <a href="dashboard.html" class="logo-link">
+            <img src="logo.png" alt="Logo">
+        </a>
+        <div class="header-actions">
+            <a href="dashboard.html" style="text-decoration: none;">
+                <i class="fas fa-arrow-left user-icon" title="Back to Dashboard"></i>
+            </a>
+            <i class="fas fa-lock admin-lock" onclick="toggleAdmin()" title="Admin Mode"></i>
+            <i class="fas fa-user-circle user-icon" title="My Profile"></i>
+            <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <div class="container">
+            
+            <div class="page-header">
+                <p>Employee Classifieds</p>
+                <h1>Marketplace</h1>
+            </div>
+
+            <div class="controls-area">
+                <div class="search-container">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search for cars, mobiles, furniture...">
+                </div>
+                <button class="sell-btn" onclick="openModal()">
+                    <i class="fas fa-plus-circle"></i> Sell an Item
+                </button>
+            </div>
+
+            <main class="market-grid" id="marketGrid"></main>
+
+            <footer style="text-align:center; padding: 20px; color: var(--med-grey); font-size: 0.9rem;">
+                &copy; 2026 INTERNAL MARKETPLACE
+            </footer>
+        </div>
+    </div>
+
+    <div id="sellModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 style="color: var(--navy); margin-bottom: 20px;">Post an Ad</h2>
+            
+            <form onsubmit="postAd(event)">
+                <div class="form-group">
+                    <label class="form-label">Item Title</label>
+                    <input type="text" id="adTitle" class="form-input" placeholder="e.g. iPhone 13 Pro" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price (PKR)</label>
+                    <input type="number" id="adPrice" class="form-input" placeholder="e.g. 150000" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="adCategory" class="form-select">
+                        <option>Electronics</option>
+                        <option>Vehicles</option>
+                        <option>Furniture</option>
+                        <option>Fashion</option>
+                        <option>Others</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Upload Image</label>
+                    <div class="file-input-wrapper">
+                        <button class="btn-file" type="button" onclick="document.getElementById('adImage').click()">
+                            <i class="fas fa-camera"></i> Choose Photo
+                        </button>
+                        <input type="file" id="adImage" accept="image/*" onchange="previewImage(this)">
+                    </div>
+                    <small id="fileName" style="display:block; margin-top:5px; color:var(--lime);"></small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Seller Name</label>
+                    <input type="text" id="adSeller" class="form-input" placeholder="e.g. Ali Ahmed (IT)" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number</label>
+                    <input type="tel" id="adPhone" class="form-input" placeholder="e.g. 923001234567" required>
+                </div>
+                <button type="submit" class="submit-btn">Post Ad Now</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast">Action Successful</div>
+
+    <script>
+        // --- 1. FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1dRvektkslreuNkCII5PjAgFJWy-ZvOQ",
+            authDomain: "ipak-olx.firebaseapp.com",
+            projectId: "ipak-olx",
+            storageBucket: "ipak-olx.appspot.com",
+            messagingSenderId: "257101603788", 
+            appId: "1:257101603788:web:01440a539c4bd36d723369"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- 2. USER SESSION & DATA ---
+        let items = [];
+        let currentImageBase64 = "https://images.unsplash.com/photo-1526304640152-d4619684e484?auto=format&fit=crop&q=80&w=400";
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        
+        let myUserId = localStorage.getItem('marketplaceUserId');
+        if (!myUserId) {
+            myUserId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('marketplaceUserId', myUserId);
+        }
+
+        // --- 3. FETCH & FILTER DATA (7-DAYS AUTO DELETE) ---
+        function loadItems() {
+            db.collection("marketItems").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+                items = [];
+                let now = Date.now();
+
+                snapshot.forEach((doc) => {
+                    let data = doc.data();
+                    let itemId = doc.id;
+
+                    if (now - data.createdAt > SEVEN_DAYS_MS) {
+                        db.collection("marketItems").doc(itemId).delete();
+                    } else {
+                        items.push({ id: itemId, ...data });
+                    }
+                });
+                renderItems(items);
+            });
+        }
+
+        loadItems();
+
+        // --- 4. ADMIN LOGIC ---
+        let isAdmin = false;
+        function toggleAdmin() {
+            if (!isAdmin) {
+                let pass = prompt("Enter Admin Password:");
+                if (pass === "5550") {
+                    isAdmin = true;
+                    document.body.classList.add('admin-mode');
+                    document.querySelector('.admin-lock').classList.add('admin-active');
+                    showToast("Admin Mode: ON");
+                    renderItems(items); 
+                } else {
+                    showToast("Incorrect Password");
+                }
+            } else {
+                isAdmin = false;
+                document.body.classList.remove('admin-mode');
+                document.querySelector('.admin-lock').classList.remove('admin-active');
+                showToast("Admin Mode: OFF");
+                renderItems(items);
+            }
+        }
+
+        // --- 5. DELETE ITEM LOGIC ---
+        function deleteItem(id) {
+            if (confirm("Are you sure you want to delete this listing?")) {
+                db.collection("marketItems").doc(id).delete().then(() => {
+                    showToast("Item Deleted Successfully");
+                }).catch((error) => {
+                    console.error("Error deleting document: ", error);
+                });
+            }
+        }
+
+        // --- 6. RENDER ITEMS ---
+        function renderItems(data) {
+            const grid = document.getElementById('marketGrid');
+            grid.innerHTML = "";
+            
+            if (data.length === 0) {
+                grid.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:#999; margin-top:20px;'>No items available right now.</p>";
+                return;
+            }
+
+            data.forEach(item => {
+                const waMsg = `Hi, I saw your ad for *${item.title}* on the Marketplace. Is it available?`;
+                const waLink = `https://wa.me/${item.phone}?text=${encodeURIComponent(waMsg)}`;
+
+                const isOwner = item.userId === myUserId;
+                const deleteBtnHtml = (isOwner || isAdmin) ? 
+                    `<div class="delete-btn" style="display: flex;" onclick="deleteItem('${item.id}')">
+                        <i class="fas fa-trash"></i>
+                    </div>` : '';
+
+                grid.innerHTML += `
+                    <div class="item-card">
+                        ${deleteBtnHtml}
+                        <img src="${item.image}" class="item-image" alt="${item.title}">
+                        <div class="price-tag">PKR ${item.price}</div>
+                        <div class="card-body">
+                            <div class="item-title">${item.title}</div>
+                            <div class="item-category">${item.category}</div>
+                            <div class="seller-info">
+                                <i class="fas fa-user-tag seller-icon"></i> ${item.seller}
+                            </div>
+                            <a href="${waLink}" target="_blank" class="whatsapp-btn">
+                                <i class="fab fa-whatsapp" style="font-size:1.2rem"></i> Connect on WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 7. IMAGE HANDLING ---
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImageBase64 = e.target.result;
+                    document.getElementById('fileName').innerText = "Selected: " + input.files[0].name;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- 8. POST AD TO FIREBASE ---
+        function postAd(e) {
+            e.preventDefault();
+            
+            const newItem = {
+                title: document.getElementById('adTitle').value,
+                price: parseInt(document.getElementById('adPrice').value).toLocaleString(),
+                category: document.getElementById('adCategory').value,
+                seller: document.getElementById('adSeller').value,
+                phone: document.getElementById('adPhone').value,
+                image: currentImageBase64,
+                createdAt: Date.now(),
+                userId: myUserId 
+            };
+
+            db.collection("marketItems").add(newItem).then(() => {
+                closeModal();
+                e.target.reset();
+                currentImageBase64 = "https://images.unsplash.com/photo-1526304640152-d4619684e484?w=400"; 
+                document.getElementById('fileName').innerText = "";
+                showToast("Ad Posted Successfully!");
+            }).catch((error) => {
+                console.error("Error adding document: ", error);
+                showToast("Error posting ad");
+            });
+        }
+
+        // --- 9. UTILITIES ---
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const filtered = items.filter(item => 
+                item.title.toLowerCase().includes(term) || 
+                item.category.toLowerCase().includes(term) ||
+                item.seller.toLowerCase().includes(term)
+            );
+            renderItems(filtered);
+        });
+
+        function openModal() { 
+            const modal = document.getElementById('sellModal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+                document.getElementById('adTitle').focus(); 
+            }, 10);
+        }
+        
+        function closeModal() { 
+            const modal = document.getElementById('sellModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        window.onclick = (event) => { if (event.target == document.getElementById('sellModal')) closeModal(); }
+
+        // --- 10. CURSOR ANIMATION ---
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX; const posY = e.clientY;
+            dot.style.left = `${posX}px`; dot.style.top = `${posY}px`;
+            outline.animate({ left: `${posX - 20}px`, top: `${posY - 20}px` }, { duration: 400, fill: "forwards" });
+        });
+
+        document.querySelectorAll('a, button, input, select, .item-card').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+    </script>
+</body>
+</html>

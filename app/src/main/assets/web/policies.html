@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPAK Portal - Policies</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --navy: #203265;
+            --lime: #A8C500;
+            --white: #FFFFFF;
+            --med-grey: #9C9C9C;
+            --light-grey: #D4D4D4;
+            --bg-color: #F5F7FA;
+            --border-light: #E5E7EB; /* Added for standard header */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; cursor: none; }
+        
+        body { 
+            color: var(--navy); 
+            background: var(--bg-color); 
+            min-height: 100vh; 
+            overflow-x: hidden;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor-dot {
+            width: 8px; height: 8px; background: var(--lime);
+            position: fixed; pointer-events: none; z-index: 10000;
+            border-radius: 50%; box-shadow: 0 0 10px var(--lime);
+        }
+        .cursor-outline {
+            width: 40px; height: 40px; border: 2px solid var(--navy);
+            position: fixed; pointer-events: none; z-index: 9999;
+            border-radius: 50%; transition: width 0.2s, height 0.2s, background 0.2s;
+        }
+        body.hovering .cursor-outline {
+            width: 60px; height: 60px; border-color: var(--lime);
+            background: rgba(168, 197, 0, 0.1);
+        }
+
+        /* --- STANDARD HEADER STYLES --- */
+        .top-bar {
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid var(--border-light);
+            height: 64px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 32px;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+        }
+
+        .logo-link img { width: 100px; height: auto; transition: opacity 0.3s ease; }
+        .logo-link:hover img { opacity: 0.8; }
+
+        .header-actions { display: flex; align-items: center; gap: 16px; }
+        
+        .user-icon { font-size: 22px; color: var(--navy); transition: color 0.3s ease; cursor: pointer; }
+        .user-icon:hover { color: var(--lime); }
+
+        .logout-btn {
+            padding: 6px 16px; background: transparent;
+            border: 1px solid var(--border-light); color: var(--navy);
+            border-radius: 6px; font-weight: 500; font-size: 13px;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .logout-btn:hover { border-color: var(--navy); background: #f3f4f6; }
+
+        /* --- LAYOUT --- */
+        .wrapper { padding-top: 120px; padding-bottom: 50px; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* --- HEADER & SEARCH --- */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .page-header { text-align: center; margin-bottom: 40px; animation: float 6s ease-in-out infinite; }
+        .page-header h1 { font-size: 2.5rem; color: var(--navy); }
+        .page-header p { color: var(--lime); letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; font-weight: 700; }
+
+        .search-container { display: flex; justify-content: center; margin-bottom: 50px; }
+        .search-box {
+            width: 100%; max-width: 600px; padding: 15px 25px;
+            border-radius: 50px; border: 1px solid var(--light-grey);
+            outline: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+        .search-box:focus { border-color: var(--lime); box-shadow: 0 0 15px rgba(168, 197, 0, 0.1); }
+
+        /* --- POLICY GRID --- */
+        .policy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .policy-card {
+            background: var(--white);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 18px 22px;
+            border-radius: 16px;
+            display: flex; align-items: center; gap: 15px;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+        }
+
+        .policy-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--lime);
+            box-shadow: 0 10px 25px rgba(32, 50, 101, 0.08);
+        }
+
+        .policy-card i {
+            color: var(--navy); font-size: 1.2rem; 
+            min-width: 25px; text-align: center; transition: 0.3s;
+        }
+        .policy-card:hover i { color: var(--lime); transform: scale(1.1); }
+
+        .policy-card span {
+            color: var(--navy); font-weight: 600; font-size: 0.85rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        footer { text-align: center; margin-top: 80px; padding: 40px 0; color: var(--med-grey); font-size: 0.8rem; letter-spacing: 2px; }
+
+        /* --- MODAL / A4 POPUP STYLES --- */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(32, 50, 101, 0.8);
+            z-index: 9999; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* 🔴 MOBILE WATERMARK PROTECTION 🔴 */
+        .modal-overlay::after {
+            content: 'CONFIDENTIAL - IPAK USER ID: 98765';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: clamp(2rem, 5vw, 5rem);
+            color: rgba(0, 0, 0, 0.07); 
+            pointer-events: none; 
+            z-index: 10000;
+            user-select: none;
+            white-space: nowrap;
+            font-weight: 900;
+            letter-spacing: 5px;
+        }
+
+        .a4-document {
+            background: var(--white);
+            width: 100%;
+            max-width: 794px;
+            height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            position: relative;
+            overflow-y: auto;
+            padding: 50px 60px;
+            color: #333;
+            line-height: 1.6;
+            z-index: 10001;
+        }
+
+        .a4-document::-webkit-scrollbar { width: 8px; }
+        .a4-document::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .a4-document::-webkit-scrollbar-thumb { background: var(--med-grey); border-radius: 4px; }
+        .a4-document::-webkit-scrollbar-thumb:hover { background: var(--navy); }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--navy);
+            transition: 0.3s;
+            z-index: 10002;
+        }
+        .close-modal:hover { color: var(--lime); transform: scale(1.1); }
+
+        /* Document Typography */
+        .doc-title { text-align: center; color: var(--navy); margin-bottom: 30px; text-transform: uppercase; border-bottom: 2px solid var(--lime); padding-bottom: 10px; }
+        .doc-section { margin-bottom: 20px; }
+        .doc-section h2 { font-size: 1.2rem; color: var(--navy); margin-bottom: 10px; }
+        .doc-section h3 { font-size: 1.05rem; color: var(--navy); margin-bottom: 8px; margin-top: 15px; }
+        .doc-section p, .doc-section ul, .doc-section ol { font-size: 0.95rem; margin-bottom: 10px; text-align: justify; }
+        .doc-section ul, .doc-section ol { padding-left: 25px; margin-bottom: 15px; }
+        .doc-section li { margin-bottom: 5px; }
+        .doc-note { background: var(--bg-color); padding: 15px; border-left: 4px solid var(--lime); font-style: italic; margin: 15px 0; font-size: 0.9rem; }
+        
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            padding-top: 20px;
+        }
+        .sign-block { text-align: center; }
+        .sign-line { width: 200px; border-top: 1px solid #333; margin-bottom: 5px; }
+        .sign-title { font-weight: 600; font-size: 0.9rem; color: var(--navy); }
+        .sign-sub { font-size: 0.8rem; color: var(--med-grey); }
+
+        @media (max-width: 768px) {
+            body { cursor: auto; }
+            .cursor-dot, .cursor-outline { display: none; }
+            .top-bar { padding: 0 20px; }
+            .policy-grid { grid-template-columns: 1fr; }
+            .a4-document { padding: 30px 20px; height: 95vh; }
+            .signatures { flex-direction: column; gap: 40px; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <nav class="top-bar">
+        <a href="dashboard.html" class="logo-link">
+            <img src="logo.png" alt="IPAK Logo">
+        </a>
+        <div class="header-actions">
+            <a href="dashboard.html" style="text-decoration: none;">
+                <i class="fas fa-arrow-left user-icon" title="Back to Dashboard"></i>
+            </a>
+            
+            <i class="fas fa-user-circle user-icon" title="My Profile"></i>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <div class="container">
+            
+            <div class="page-header">
+                <p></p>
+                <h1>IPAK Policies </h1>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="policySearch" class="search-box" placeholder="Search for a policy (e.g. Leave, Laptop, Conduct)...">
+            </div>
+
+            <div class="policy-grid" id="policyGrid">
+                <a href="#" class="policy-card" id="btn-grading"><i class="fas fa-sitemap"></i><span title="INTERNATIONAL PACKAGING FILMS LTD. GRADING STRUCTURE">1. IPAK Grading Structure</span></a>
+                <a href="#" class="policy-card" id="btn-substance"><i class="fas fa-vial"></i><span title="SUBSTANCE ABUSE TESTING">2. Substance Abuse Testing</span></a>
+                <a href="#" class="policy-card" id="btn-disciplinary"><i class="fas fa-scale-balanced"></i><span title="DISCIPLINARY MATTERS POLICY">3. Disciplinary Matters Policy</span></a>
+                <a href="#" class="policy-card" id="btn-email"><i class="fas fa-envelope"></i><span title="EMAIL USAGE POLICY">4. Email Usage Policy</span></a>
+                <a href="#" class="policy-card" id="btn-electronic-comm"><i class="fas fa-wifi"></i><span title="ELECTRONIC COMMUNICATION USAGE POLICY">5. Electronic Comm. Policy</span></a>
+                <a href="#" class="policy-card" id="btn-laptop"><i class="fas fa-laptop-code"></i><span title="LAPTOP SECURITY POLICY">6. Laptop Security Policy</span></a>
+                <a href="#" class="policy-card" id="btn-internship"><i class="fas fa-graduation-cap"></i><span title="INTERNSHIP POLICY">7. Internship Policy</span></a>
+                <a href="#" class="policy-card" id="btn-retirement"><i class="fas fa-person-cane"></i><span title="RETIREMENT POLICY">8. Retirement Policy</span></a>
+                <a href="#" class="policy-card" id="btn-dress-code"><i class="fas fa-user-tie"></i><span title="DRESS CODE POLICY">9. Dress Code Policy</span></a>
+                <a href="#" class="policy-card" id="btn-training"><i class="fas fa-chalkboard-user"></i><span title="TRAINING & DEVELOPMENT POLICY">10. Training & Development</span></a>
+                <a href="#" class="policy-card" id="btn-eobi"><i class="fas fa-piggy-bank"></i><span title="EOBI POLICY">11. EOBI Policy</span></a>
+                <a href="#" class="policy-card" id="btn-gratuity"><i class="fas fa-coins"></i><span title="GRATUITY POLICY">12. Gratuity Policy</span></a>
+                <a href="#" class="policy-card" id="btn-hajj"><i class="fas fa-kaaba"></i><span title="HAJJ BALLOTING POLICY">13. Hajj Balloting Policy</span></a>
+                <a href="#" class="policy-card" id="btn-vehicle-balloting"><i class="fas fa-car"></i><span title="VEHICLE BALLOTING POLICY">14. Vehicle Balloting Policy</span></a>
+            </div>
+
+            <footer>&copy; 2026 IPAK PORTAL | SECURE DOCUMENTATION SYSTEM</footer>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="gradingModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeGradingBtn"><i class="fas fa-times"></i></button>
+
+            <h1 class="doc-title">IPAK Grading Structure</h1>
+
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+
+                <h3>1.1. Objective</h3>
+                <p>The objective of the Grading Structure is to identify the position levels in the organization and how the structure of different departments will operate.</p>
+
+                <h3>1.2. Scope</h3>
+                <p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+
+                <h3>1.3. Exception</h3>
+                <p>All the exceptions of the policy will be approved by the CEO.</p>
+
+                <h3>1.4. Frequency of Review</h3>
+                <p>This policy will be reviewed on need basis if any changes are required.</p>
+
+                <h3>1.5. Authority</h3>
+                <p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+
+                <h3>1.6. Applicability</h3>
+                <p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+
+                <h3>2.1. Grading Structure</h3>
+                <table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:10px; margin-bottom:20px;">
+                    <thead>
+                        <tr style="background:var(--navy); color:var(--white);">
+                            <th style="padding:10px 14px; text-align:center; border:1px solid var(--light-grey); width:30%;" colspan="2">Position Level</th>
+                            <th style="padding:10px 14px; text-align:center; border:1px solid var(--light-grey); width:20%;">Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); font-weight:600; color:var(--navy); text-align:center; font-style:italic; background:#eef1f8;" rowspan="4">Strategic Management</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">CEO</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">SM-1</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">COO</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">SM-2</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Director</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">SM-3</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Deputy Director</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">SM-4</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); font-weight:600; color:var(--navy); text-align:center; font-style:italic; background:#eef1f8;" rowspan="3">Senior Management</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:left;" rowspan="6">Head of Function/Division</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">SM-5</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">SM-6</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">SM-7</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); font-weight:600; color:var(--navy); text-align:center; font-style:italic; background:#eef1f8;" rowspan="8">Management</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-1</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-2</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-3</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Senior Manager</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-4</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Manager</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-5</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Deputy Manager</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-6</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Senior Assistant Manager</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-7</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Assistant Manager</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">MM-8</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); font-weight:600; color:var(--navy); text-align:center; font-style:italic; background:#eef1f8;" rowspan="9">Junior Management</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Senior Executive</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-1</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Executive</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-2</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Specialist</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-3</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Senior Officer</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-4</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Officer I</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-5</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Officer II</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-6</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Junior Officer I</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-7</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Junior Officer II</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-8</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey);">Junior Officer III</td>
+                            <td style="padding:9px 14px; border:1px solid var(--light-grey); text-align:center; font-style:italic; font-weight:600;">JM-9</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>2.2. Grading Structure &amp; Job Evaluation Process</h3>
+                <ol type="a">
+                    <li>All the departments will follow the approved Grading Structure only.</li>
+                    <li>All the positions will be assessed through Job Evaluation and based on the results, the specific Grade will be assigned.</li>
+                    <li>To assess the position in the organization, HR Department will assess the position based on the following factors:
+                        <ul style="margin-top:8px;">
+                            <li><strong>Impact:</strong> This factor will determine the size of the organization and the impact that a position has on the organization within the context of its contribution.</li>
+                            <li><strong>Communication:</strong> This factor will determine the nature of the position's communication responsibility, both within and outside the organization.</li>
+                            <li><strong>Innovation:</strong> This factor will determine the expected level of innovation from the position and the complexity of the innovation activity.</li>
+                            <li><strong>Knowledge:</strong> This factor relates to the level of knowledge required in the job to accomplish objectives and create value.</li>
+                        </ul>
+                    </li>
+                    <li>All the positions in the organization will be assessed before adding in the organizational structure and the recommendations will be shared with the Management.</li>
+                </ol>
+
+                <h3>2.3. Career Track at IPAK</h3>
+                <ol type="a">
+                    <li>To have a successful career at IPAK, important factors are sustained performance, education level and experience.</li>
+                    <li>The requirements to identify the grade level of a position for hiring and promotion will be based on the Career Mapping Sheet developed by HR Department.</li>
+                </ol>
+
+                <h3>2.4. Grading Structure &amp; Position Titles</h3>
+                <ol type="a">
+                    <li>Position title can be different, but the grade will remain the same.</li>
+                    <li>Through Job Evaluations, the recommendations will be provided to the Management on the placement of the position in the relevant grade.</li>
+                    <li>Line Manager will consult the HR Department for the addition of a position title in the organization.</li>
+                    <li>Benefits are linked to Grades and position titles cannot determine the Compensation &amp; Benefits.</li>
+                </ol>
+
+                <h3>2.5. New Position &amp; Grading</h3>
+                <ol type="a">
+                    <li>In case of the requirement of any new position, the position will be evaluated.</li>
+                    <li>The evaluation will define the grade of the position in the organization.</li>
+                    <li>The grade will define the related compensation and benefits of the position.</li>
+                </ol>
+            </div>
+
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="substanceModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeSubstanceBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Substance Abuse Testing Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>IPAK maintains a strict policy against the use of unlawful/prohibited drugs while at work or on company premises.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Policy Details</h3>
+                <ol type="a">
+                    <li>To facilitate the administration and enforcement of this policy, IPAK may require or request employees to submit drug or substance abuse testing under certain circumstances.</li>
+                    <li>In cases where an employee's manager has reasonable suspicion to believe that the employee possesses or is under the influence of drugs, substance or drug screening may be ordered.</li>
+                    <li>HOD will inform HR Department for such related matters to proceed with the required actions according to the policy.</li>
+                    <li>This suspicion must be based on any objective symptoms, such as factors related to the employee's appearance, behavior, speech and/or other factors.</li>
+                    <li>If an employee is on medically prescribed medication, it is the employee's responsibility to advise his/her supervisor of this fact before he or she reports to work.</li>
+                    <li>Testing may also be required if an employee is found to be in possession of physical substances that could relate to the use of an illicit drug.</li>
+                    <li>Such evidence includes, but is not limited to drugs, drug paraphernalia or alcohol.</li>
+                    <li>Possession of drugs or alcohol on IPAK's property is prohibited whether or not it is determined that the employee also used such substances.</li>
+                </ol>
+                <h3>2.2. Grading Disciplinary Action</h3>
+                <ol type="a">
+                    <li>The Management shall examine any such findings and decide which action should be taken against the accused.</li>
+                    <li>In case of any criminal breach, the company reserves the right to refer the matter to state authorities for an appropriate action in accordance with law.</li>
+                </ol>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="disciplinaryModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeModalBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Disciplinary Matters Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of the policy is to describe the standards of discipline/conduct to be observed by the employees and lays down the process to be followed to ensure a fair and transparent process of handling in-discipline/misconduct cases.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Discipline</h3>
+                <p>Standards of conduct have been embodied in the:</p>
+                <ol type="a"><li>IPAK Code of Conduct</li><li>Applicable laws or government regulations</li><li>IPAK Policy Manuals & SOPs</li><li>Any other policy of IPAK</li></ol>
+                <h3>2.2. Examples Of Misconduct</h3>
+                <ol type="a">
+                    <li>Willful in-subordination or disobedience to any lawful and reasonable directions of a Line Manager or Management.</li>
+                    <li>Theft, Fraud, or dishonesty in connection IPAK's business or property.</li>
+                    <li>Taking or giving bribes or any illegal gratification.</li>
+                    <li>Riotous or disorderly behavior during working hours.</li>
+                    <li>Malingering/faking illness or other incapability to avoid duty or work.</li>
+                    <li>Harassment of other employees.</li>
+                    <li>Habitual absence without leave.</li>
+                    <li>Habitual late attendance.</li>
+                    <li>Habitual breach of any law applicable to the establishment.</li>
+                    <li>Habitual negligence or neglect of work.</li>
+                </ol>
+                <div class="doc-note"><strong>Note:</strong> Cases of sexual Harassment will be dealt with as defined in the law, "The Protection against Harassment of Women at the Workplace Act 2010".</div>
+                <h3>2.3. Disciplinary Matters Procedure</h3>
+                <ol type="a">
+                    <li>When a Line Manager/HR Manager receives report about the alleged misconduct, he/she shall examine the situation for authenticity of facts within 48 hours.</li>
+                    <li>If the allegation amounts to misconduct, then "Show Cause Notice" shall be issued by HR Department.</li>
+                    <li>The accused should be given 3 calendar days (72 hours) to submit his/her written explanation.</li>
+                    <li>The show cause shall be served personally upon the employee concerned.</li>
+                    <li>In case the explanation is not found satisfactory, formal inquiry into the matter would be initiated.</li>
+                    <li>Head of HR after consultation with the Management, would finalize whether such inquiry would be conducted "on job" or "suspend from services till facts are clear".</li>
+                    <li>The Inquiry Officer shall write down all the proceedings and get the signature of the accused.</li>
+                    <li>The inquiry officer shall, after giving due opportunity of hearing and cross examination, submit his/her findings/report to the Management.</li>
+                </ol>
+                <h3>2.4. Disciplinary Action</h3>
+                <p>The Management shall examine the inquiry findings and decide which action should be taken:</p>
+                <ol type="a"><li>Warning / Reprimand</li><li>Demotion to a lower position</li><li>Stoppage of one-year increment</li><li>Seizure/reduction of perks & benefits</li><li>Dismissal from service</li></ol>
+                <h3>2.5. Criminal Breach</h3><p>In case of any criminal breach, the company reserves the right to refer the matter to state authorities.</p>
+                <h3>2.6. Resolution</h3><p>The disciplinary action may be in writing and given to the accused. If the allegations are not proven, the matter will be dropped.</p>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="dressCodeModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeDressCodeBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Dress Code Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide guidelines on the Dress Code for employees at IPAK.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Dress Code</h3>
+                <p><strong>Office based Employees & Field Staff</strong></p>
+                <ol type="a">
+                    <li>All employees are expected to always use their own good judgment and dress appropriately to project a professional image.</li>
+                    <li>Business formal attire which includes dress shirt & trousers is expected at a minimum on all weekdays (Monday to Thursday).</li>
+                    <li>Business formal which includes dress shirt with necktie and suit for important meetings with external parties.</li>
+                    <li>Fridays shall be observed as semi-casual days. An employee can wear appropriate Shalwar Kameez with Waistcoat/Coat.</li>
+                    <li>Saturdays shall be observed as casual days. An employee can wear appropriate Jeans or Chinos with color T-Shirt/Polo Shirt.</li>
+                    <li>Appropriate closed formal shoes are allowed in the office.</li>
+                    <li>Slippers to be used only during prayer times.</li>
+                </ol>
+                <p><strong>Plant based Employees</strong></p>
+                <ol type="a">
+                    <li>All employees will ensure to always use the uniform in the plant premises.</li>
+                    <li>Only the prescribed uniform by the company will be acceptable which includes the complete kit (shirt, trousers, and safety shoes).</li>
+                    <li>No Jewelry item is allowed in the plant area to avoid any safety risk.</li>
+                </ol>
+                <h3>2.2. Visitors at Plant</h3>
+                <ol type="a">
+                    <li>No visitor will be allowed in the plant area without safety briefing and will be provided with a Visitor Safety Jacket.</li>
+                    <li>This is the responsibility of the host to ensure that all the requirements are met.</li>
+                </ol>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="retirementModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeRetirementBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Retirement Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide guidelines on the retirement of the employee from International Packaging Films Ltd.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the CEO.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Retirement Age</h3><p>Retirement age of all the cadres of employee is fixed at 63 years.</p>
+                <h3>2.2. Re-Employment on Contract</h3>
+                <ol type="a">
+                    <li>The Management in its absolute discretion may appoint the retiring employee on contract basis.</li>
+                    <li>Final settlement will be paid to the employee at the time of attaining 63 years of age.</li>
+                    <li>The terms of the employment will be as per the signed contract.</li>
+                    <li>The terms and conditions may differ for different cases.</li>
+                </ol>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="emailModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeEmailBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Email Usage Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide guidelines to ensure the proper use of IPAK's email system and make users aware of what IPAK deems as acceptable or unacceptable use.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Rules &amp; Requirements</h3>
+                <ol type="a">
+                    <li>Email is a business communication tool and users are obliged to use this tool in a responsible, effective, and lawful manner.</li>
+                    <li>The following rules must be strictly adhered to. It is prohibited to:
+                        <ul style="margin-top:8px;">
+                            <li>Send or forward emails containing libelous, defamatory, offensive, racist or obscene remarks.</li>
+                            <li>Forward or copy a message containing confidential or copyrighted information without prior approval.</li>
+                            <li>Send unsolicited email messages or forge email messages.</li>
+                            <li>Send email messages using another person's email account.</li>
+                            <li>Send an attachment that contains a virus, spyware, adware, or any such malicious code.</li>
+                        </ul>
+                    </li>
+                    <li>If you receive an email which is in violation of the above rules, you must promptly notify your Line Manager.</li>
+                </ol>
+                <h3>2.2. Writing Emails</h3>
+                <ol type="a">
+                    <li>Write well-structured emails and use short, descriptive subjects.</li>
+                    <li>IPAK email style is informal. Signatures must include your name, job title and company name.</li>
+                    <li>Spell check all mails prior to transmission.</li>
+                    <li>Do not send unnecessary attachments. Compress attachments larger than 200K before sending.</li>
+                    <li>Do not write emails in capitals.</li>
+                    <li>Only mark emails as important if they really are important.</li>
+                </ol>
+                <h3>2.3. Personal Use</h3><p>The company's email system is meant for business use only. All messages distributed via the company's email system are IPAK's property.</p>
+                <h3>2.4. System Monitoring</h3><p>Users of the company's email system expressly waive any right of privacy. IPAK may monitor emails without prior notification.</p>
+                <h3>2.5. Declaration</h3><p>Employees are required to sign a copy of the Email Policy declaring that they have read, understood, and will comply with the guidelines.</p>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="electronicCommModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeElectronicCommBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Electronic Communication Usage Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>IPAK has established this policy to make certain that employees utilize electronic communications devices in a legal, ethical, and appropriate manner.</p>
+                <h3>1.2. Scope</h3><p>This policy extends to all features of the company's electronic communications systems, including all computing equipment, networking equipment, connections to the Internet, and all voice and video equipment.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Standards and Rules</h3>
+                <ol type="a">
+                    <li>The company's policy against harassment extends to the use of computers and the Internet.</li>
+                    <li>The company's anti-discrimination policies extend to the use of communications systems.</li>
+                    <li>Employees may not use any electronic communications device in a manner that violates trademark, copyright, or license rights of any other person.</li>
+                </ol>
+                <h3>2.2. Access</h3>
+                <ol type="a">
+                    <li>All computers and electronic devices must remain fully accessible to the company and will remain the property of IPAK.</li>
+                    <li>IPAK retains the right to gain access to any information received by, transmitted by, or stored in any electronic communications device.</li>
+                </ol>
+                <h3>2.3. Cell Phone Usage</h3>
+                <ol type="a">
+                    <li>Employees are expected to exercise prudent judgment in keeping personal calls to a minimum.</li>
+                    <li>Camera phones must not be used in or around the workplace to capture images, without the prior consent of the person(s) in such images.</li>
+                    <li>The company will not be liable for the loss of personal cell phones brought into the workplace.</li>
+                </ol>
+                <h3>2.4. Compliance is Essential</h3>
+                <p>Employees who violate any aspect of this policy will be subject to disciplinary action.</p>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="internshipModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeInternshipBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Internship Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide an opportunity to students to explore IPAK through a mutually benefitting relationship with students and Educational Institutions.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the interns joining International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Types of Internships Offered</h3>
+                <ul>
+                    <li>IPAK Internship Program for Graduates &amp; Postgraduates from HEC recognized Institutes.</li>
+                    <li>IPAK Internship Program for Associate Engineers from recognized Technical Institutes.</li>
+                </ul>
+                <h3>2.2. Selection Criteria</h3>
+                <ol type="a">
+                    <li>Internship program is only for students enrolled in educational institutes.</li>
+                    <li>Internship period will not exceed 45 Days; Head of HR may approve extensions.</li>
+                    <li>Annually, HR will induct internees in Summers or any other time based on business requirement.</li>
+                </ol>
+                <h3>2.3. Stipend</h3>
+                <table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:10px; margin-bottom:15px;">
+                    <thead><tr style="background:var(--navy); color:var(--white);"><th style="padding:10px 14px; text-align:left; border:1px solid var(--light-grey);">Education</th><th style="padding:10px 14px; text-align:left; border:1px solid var(--light-grey);">Stipend per Month</th></tr></thead>
+                    <tbody>
+                        <tr style="background:#f9f9f9;"><td style="padding:9px 14px; border:1px solid var(--light-grey);">BSc Engineering</td><td style="padding:9px 14px; border:1px solid var(--light-grey);">PKR 20,000/-</td></tr>
+                        <tr><td style="padding:9px 14px; border:1px solid var(--light-grey);">BS Management</td><td style="padding:9px 14px; border:1px solid var(--light-grey);">PKR 20,000/-</td></tr>
+                        <tr style="background:#f9f9f9;"><td style="padding:9px 14px; border:1px solid var(--light-grey);">MSc Engineering</td><td style="padding:9px 14px; border:1px solid var(--light-grey);">PKR 25,000/-</td></tr>
+                        <tr><td style="padding:9px 14px; border:1px solid var(--light-grey);">MS Management</td><td style="padding:9px 14px; border:1px solid var(--light-grey);">PKR 25,000/-</td></tr>
+                        <tr style="background:#f9f9f9;"><td style="padding:9px 14px; border:1px solid var(--light-grey);">DAE</td><td style="padding:9px 14px; border:1px solid var(--light-grey);">PKR 15,000/-</td></tr>
+                        <tr><td style="padding:9px 14px; border:1px solid var(--light-grey);">ACCA &amp; Others</td><td style="padding:9px 14px; border:1px solid var(--light-grey);">PKR 20,000/-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="laptopModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeLaptopBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Laptop Security Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to define the policy for security of a company provided laptop computer, the device as well as the business systems and data residing upon it.</p>
+                <h3>1.2. Scope</h3><p>This policy applies to all permanent and contractual employees of IPAK who have company provided laptops.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Laptop Security</h3>
+                <ol type="a">
+                    <li>A laptop is assigned to the employee based on the role and nature of assigned work.</li>
+                    <li>IT controls must be applied on each laptop before handing over to the employee.</li>
+                    <li>It is the employee's responsibility to use the laptop properly, protect it from being damaged, stolen or misused.</li>
+                    <li>In case the laptop is stolen or damaged, the employee shall immediately inform, in writing, his/her Department Head.</li>
+                    <li>In case of theft where employee negligence is proven, the employee shall contribute the cost of the replacement laptop price.</li>
+                    <li>The employee shall not leave the laptop unattended without proper screen lock.</li>
+                    <li>The employee is accountable for any action taken by his/her user ID and will not share username and password.</li>
+                    <li>The employee shall not alter the security and anti-virus configurations.</li>
+                    <li>The employee must ensure the laptop is not used for any unlawful activity.</li>
+                </ol>
+                <h3>2.2. Enforcement</h3><p>Any employee found to have violated this policy may be subject to disciplinary action.</p>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="gratuityModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeGratuityBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Gratuity Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide clarity on the gratuity of employees at IPAK.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>No exception out of applicable laws will be admissible.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Introduction</h3>
+                <ol type="a">
+                    <li>Gratuity is a terminal benefit at IPAK — a lump-sum amount payable to an employee on leaving service based on gross salary and period of service.</li>
+                    <li>It is a reward of good and efficient service for a substantial period of time.</li>
+                </ol>
+                <h3>2.2. Eligibility</h3>
+                <ol type="a">
+                    <li>All the permanent employees will be entitled for the Gratuity.</li>
+                    <li>Temporary, badli, probationer or contract workers will not be eligible for gratuity.</li>
+                    <li>If an employee has completed six months or more of service, they will be entitled to gratuity for that full year.</li>
+                </ol>
+                <h3>2.3. Not Entitled for Payment of Gratuity</h3>
+                <p>If an employee's services were terminated on account of misconduct (like harassment, theft etc.), gratuity would no longer be admissible.</p>
+                <h3>2.4. Calculation of Gratuity</h3>
+                <ol type="a">
+                    <li>The basis of gratuity calculation is the "Gross Salary" which includes Basic Salary, House Rent &amp; Utilities.</li>
+                    <li>Any length of service higher than six months over the number of years is considered as one year for gratuity calculation.</li>
+                    <li>Any length of service less than six months is not included in calculating gratuity.</li>
+                </ol>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="eobiModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeEobiBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">EOBI Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide guidelines on EOBI of employees at IPAK.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>No exception out of applicable laws will be admissible.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. General Rules</h3>
+                <ol type="a">
+                    <li>All IPAK employees in active service under the age of 60 years will be covered under EOBI policy as per law.</li>
+                    <li>HR Department will be responsible for deductions and payments of EOBI contributions as per law.</li>
+                    <li>The employee EOBI Card/number will be provided to the employee for future reference.</li>
+                </ol>
+                <h3>2.2. HR Department Obligation</h3>
+                <ol type="a">
+                    <li>HR Department will ensure that the payment of EOBI is paid in time.</li>
+                    <li>HR Department will ensure registration of new employees and exclusion of exiting employees in EOBI online system.</li>
+                </ol>
+                <h3>2.3. EOBI Benefits</h3><p>All the benefits against EOBI will be as prescribed by the law and regulations at the time of application.</p>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="hajjModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeHajjBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Hajj Balloting Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide guidelines on Hajj balloting for the employees at IPAK.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the eligible employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the CEO.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Introduction</h3>
+                <ol type="a">
+                    <li>IPAK will sponsor Hajj for two (2) permanent employees through balloting every year.</li>
+                    <li>Employees who have completed their 05 years of service will be eligible for the Hajj Balloting.</li>
+                    <li>Employees from JM9 to MM6 will be eligible for balloting.</li>
+                    <li>Employees who have performed Hajj earlier under this policy will not be eligible for the balloting.</li>
+                    <li>The amount of Hajj Package cannot be claimed in cash in any case.</li>
+                    <li>The results of the balloting cannot be transferred in the name of another employee.</li>
+                </ol>
+                <h3>2.2. Hajj Package</h3>
+                <ol type="a">
+                    <li>Hajj booking will be processed under Government Scheme only.</li>
+                    <li>The package will include Qurbani and other related expenses.</li>
+                </ol>
+                <h3>2.3. Financial Assistance</h3>
+                <ol type="a">
+                    <li>IPAK will provide all necessary assistance to the employee for obtaining Visa.</li>
+                    <li>Other than ticket arrangement, company will pay one basic salary for the personal expenses of the employee.</li>
+                </ol>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="trainingModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeTrainingBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Training &amp; Development Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>The objective of this policy is to provide guidelines on the Training and Development of employees at IPAK.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Three Methods of Development</h3>
+                <ul><li>Training Based Learning</li><li>Relationship Based Learning</li><li>Experiential Learning</li></ul>
+                <h3>2.2. Training Sources</h3>
+                <ul><li>Internal Training (Subject Matter Experts)</li><li>External Training (programs and external trainers)</li><li>International Training (pre-approved by Management)</li></ul>
+                <h3>2.3. Training Framework Pillars</h3>
+                <ul><li>Competence Framework</li><li>Capability Building</li><li>Leadership &amp; Management Skills</li></ul>
+                <h3>2.4. Training Assessment</h3>
+                <ol type="a">
+                    <li>Training Feedback: assesses quality of content, relevance, trainer, duration, and facilitation.</li>
+                    <li>Learning Assessment: Pre &amp; Post quiz. If any employee scores less than 70% in a post quiz, he/she is recommended for retraining.</li>
+                </ol>
+                <h3>2.5. Budget &amp; Approvals</h3>
+                <p>Training budget for the next year will be approved at the time of annual budgeting. Any additional cost will be approved by Head of HR and CEO.</p>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="vehicleBallotingModal">
+        <div class="a4-document">
+            <button class="close-modal" id="closeVehicleBallotingBtn"><i class="fas fa-times"></i></button>
+            <h1 class="doc-title">Vehicle Balloting Policy</h1>
+            <div class="doc-section">
+                <h2>1. About Policy</h2>
+                <h3>1.1. Objective</h3><p>This policy outlines the details for employees regarding purchase of company vehicle which the management has placed for disposal under common pool for balloting.</p>
+                <h3>1.2. Scope</h3><p>This policy is applicable to all the eligible employees of International Packaging Films Ltd.</p>
+                <h3>1.3. Exception</h3><p>All the exceptions of the policy will be approved by the Head of HR.</p>
+                <h3>1.4. Frequency of Review</h3><p>This policy will be reviewed on need basis if any changes are required.</p>
+                <h3>1.5. Authority</h3><p>The Company reserves the right to amend this policy or withdraw it in full at any time without assigning any reason.</p>
+                <h3>1.6. Applicability</h3><p>This policy is applicable with effect from Jan 01, 2026.</p>
+            </div>
+            <div class="doc-section">
+                <h2>2. Policy Guidelines</h2>
+                <h3>2.1. Eligibility</h3>
+                <ol type="a">
+                    <li>All confirmed, permanent employees who don't have any company-maintained vehicle or Vehicle Allowance are eligible.</li>
+                    <li>Any employee can purchase one vehicle at a time: once in every five years.</li>
+                </ol>
+                <h3>2.2. Entitlement</h3>
+                <ol type="a">
+                    <li>Qualifying employees will be able to purchase the vehicles at 75% of Market Value.</li>
+                    <li>Employee will pay transfer of ownership cost once balloting decisions are finalized.</li>
+                </ol>
+                <h3>2.3. Terms &amp; Conditions</h3>
+                <ol type="a">
+                    <li>The vehicle will be sold on "as is where is" basis.</li>
+                    <li>The employee will not sell the vehicle for a period of 12 months from the date of handing over.</li>
+                    <li>The employee will transfer the vehicle in his/her own name within 15 days from the date of handing over.</li>
+                </ol>
+                <h3>2.4. Payment</h3>
+                <ol type="a">
+                    <li>Payment methods accepted: Demand Draft, Pay Order, or Cheque in favor of International Packaging Films Ltd.</li>
+                    <li>Payment must be submitted to Admin Department within 10 working days of balloting announcement.</li>
+                </ol>
+            </div>
+            <div class="signatures">
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Human Resource Officer</div><div class="sign-sub">(CHRO)</div></div>
+                <div class="sign-block"><div class="sign-line"></div><div class="sign-title">Chief Executive Officer</div><div class="sign-sub">(CEO)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function IPAKScreenshotProtection() {
+        'use strict';
+
+        /* ── CONFIG ─────────────────────────────────── */
+        const CFG = {
+            overlayId:      'ipak-ss-overlay',
+            blurClass:      'ipak-content-blur',
+            blurPx:         20,
+            flashMs:        2000,
+            warnMsg:        'NO SCREENSHOTS',
+            warnSub:        'Content is protected. This action has been logged.',
+            devtoolsDelta:  160,
+        };
+
+        /* ── LAYER 1: PROTECTION CSS ─────────────────── */
+        const css = `
+            /* Print / browser-print block */
+            @media print {
+                body * { visibility: hidden !important; }
+                body::after {
+                    visibility: visible !important;
+                    display: flex; align-items: center; justify-content: center;
+                    position: fixed; inset: 0;
+                    content: '⛔  PRINTING THIS DOCUMENT IS STRICTLY PROHIBITED — IPAK SECURE PORTAL';
+                    font-size: 1.6rem; font-weight: 900;
+                    color: #203265; text-align: center; padding: 40px;
+                }
+            }
+
+            /* Blur class — applied instantly on detection */
+            .${CFG.blurClass} {
+                filter: blur(${CFG.blurPx}px) brightness(0.3) !important;
+                transition: filter 0.08s linear !important;
+                pointer-events: none !important;
+            }
+
+            /* Disable text selection & long-press on ALL document content */
+            .a4-document, .a4-document * {
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+                -webkit-touch-callout: none !important;
+            }
+
+            /* ── OVERLAY ── */
+            #${CFG.overlayId} {
+                display: none;
+                position: fixed; inset: 0; z-index: 2147483647;
+                background: rgba(8, 12, 35, 0.98);
+                backdrop-filter: blur(40px) saturate(0%);
+                -webkit-backdrop-filter: blur(40px) saturate(0%);
+                flex-direction: column; align-items: center; justify-content: center;
+                gap: 18px;
+            }
+            #${CFG.overlayId}.active { display: flex; animation: ipak-in 0.1s ease; }
+
+            @keyframes ipak-in {
+                from { opacity: 0; } to { opacity: 1; }
+            }
+            #ipak-ss-icon {
+                font-size: clamp(72px, 14vw, 110px); line-height: 1;
+                animation: ipak-pulse 0.55s ease infinite alternate;
+                filter: drop-shadow(0 0 20px rgba(255,40,40,0.9));
+            }
+            @keyframes ipak-pulse {
+                from { transform: scale(0.95); filter: drop-shadow(0 0 10px rgba(255,40,40,0.5)); }
+                to   { transform: scale(1.05); filter: drop-shadow(0 0 35px rgba(255,40,40,1));   }
+            }
+            #ipak-ss-title {
+                font-family: 'Inter', sans-serif;
+                font-size: clamp(1.8rem, 6vw, 3.2rem);
+                font-weight: 900; letter-spacing: 0.2em;
+                color: #ff2020; text-transform: uppercase;
+                text-shadow: 0 0 40px rgba(255,32,32,0.7), 0 0 80px rgba(255,32,32,0.3);
+            }
+            #ipak-ss-sub {
+                font-family: 'Inter', sans-serif;
+                font-size: clamp(0.8rem, 2.5vw, 1rem);
+                color: rgba(255,255,255,0.5); letter-spacing: 0.07em;
+                max-width: 420px; text-align: center;
+            }
+            #ipak-ss-badge {
+                margin-top: 10px; padding: 9px 24px;
+                border: 1px solid rgba(168,197,0,0.5); border-radius: 100px;
+                font-family: 'Inter', sans-serif; font-size: 0.72rem;
+                letter-spacing: 0.15em; color: #A8C500; text-transform: uppercase;
+            }
+            /* Scanline overlay on documents (CSS interference with some screenshot tools) */
+            .modal-overlay.active .a4-document::before {
+                content: '';
+                position: absolute; inset: 0; z-index: 99998; pointer-events: none;
+                background: repeating-linear-gradient(
+                    0deg,
+                    transparent 0px, transparent 3px,
+                    rgba(32,50,101,0.03) 3px, rgba(32,50,101,0.03) 4px
+                );
+                animation: ipak-scan 5s linear infinite;
+            }
+            @keyframes ipak-scan {
+                0% { background-position: 0 0; }
+                100% { background-position: 0 500px; }
+            }
+        `;
+        const styleEl = document.createElement('style');
+        styleEl.textContent = css;
+        document.head.appendChild(styleEl);
+
+        /* ── LAYER 2: BUILD OVERLAY DOM ──────────────── */
+        const overlay = document.createElement('div');
+        overlay.id = CFG.overlayId;
+        overlay.innerHTML = `
+            <div id="ipak-ss-icon">❌</div>
+            <div id="ipak-ss-title">${CFG.warnMsg}</div>
+            <div id="ipak-ss-sub">${CFG.warnSub}</div>
+            <div id="ipak-ss-badge">🔒 IPAK SECURE DOCUMENT SYSTEM</div>
+        `;
+        document.body.appendChild(overlay);
+
+        /* ── CORE TRIGGER ────────────────────────────── */
+        let _timer = null;
+
+        function blurDocs() {
+            document.querySelectorAll('.a4-document').forEach(el => el.classList.add(CFG.blurClass));
+        }
+        function unblurDocs() {
+            document.querySelectorAll('.a4-document').forEach(el => el.classList.remove(CFG.blurClass));
+        }
+
+        function showOverlay(reason) {
+            clearTimeout(_timer);
+            blurDocs();
+            overlay.classList.add('active');
+            _timer = setTimeout(() => {
+                overlay.classList.remove('active');
+                unblurDocs();
+            }, CFG.flashMs);
+        }
+
+        /* ── LAYER 3: KEYBOARD ───────────────────────── */
+        // keydown = blur BEFORE OS captures screen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'PrintScreen' || e.key === 'print') {
+                blurDocs(); // immediate, before OS screenshot
+            }
+        }, true);
+
+        // keyup = show overlay + wipe clipboard
+        document.addEventListener('keyup', function(e) {
+            const k = e.key || '';
+
+            // Windows/Linux PrintScreen
+            if (k === 'PrintScreen' || k === 'print') {
+                showOverlay('PrintScreen');
+                try { navigator.clipboard.writeText('').catch(() => {}); } catch(_) {}
+                return;
+            }
+            // macOS: Cmd+Shift+3 / 4 / 5 / S
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && ['3','4','5','s','S'].includes(k)) {
+                showOverlay('macOS screenshot shortcut');
+                return;
+            }
+            // Windows Snipping: Shift+S with Win key (best-effort)
+            if (e.shiftKey && ['s','S'].includes(k) && (e.getModifierState && e.getModifierState('OS'))) {
+                showOverlay('Win+Shift+S snip');
+            }
+        }, true);
+
+        /* ── LAYER 4: VISIBILITY / FOCUS ─────────────── */
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                blurDocs();
+            } else {
+                setTimeout(unblurDocs, 450);
+            }
+        });
+
+        window.addEventListener('blur', blurDocs);
+        window.addEventListener('focus', function() { setTimeout(unblurDocs, 350); });
+        window.addEventListener('pagehide', blurDocs);
+
+        /* ── LAYER 5: getDisplayMedia INTERCEPTION ───── */
+        // Blocks browser screen-share/recording API
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+            navigator.mediaDevices.getDisplayMedia = async function() {
+                showOverlay('Screen capture API');
+                throw new DOMException('Screen capture is disabled on this portal.', 'NotAllowedError');
+            };
+        }
+        // Also intercept getUserMedia if used for screen capture
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            const _origGUM = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+            navigator.mediaDevices.getUserMedia = async function(constraints) {
+                if (constraints && constraints.video && constraints.video.mediaSource === 'screen') {
+                    showOverlay('getUserMedia screen capture');
+                    throw new DOMException('Screen capture is disabled on this portal.', 'NotAllowedError');
+                }
+                return _origGUM(constraints);
+            };
+        }
+
+        /* ── LAYER 6: CONTEXT MENU & COPY BLOCK ─────── */
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.closest('.a4-document, .modal-overlay')) {
+                e.preventDefault(); return false;
+            }
+        });
+
+        document.addEventListener('copy', function(e) {
+            if (e.target.closest('.a4-document')) {
+                e.clipboardData.setData('text/plain', '');
+                e.clipboardData.setData('text/html', '');
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('cut', function(e) {
+            if (e.target.closest('.a4-document')) { e.preventDefault(); }
+        });
+
+        /* ── LAYER 7: DEVTOOLS DETECTION ─────────────── */
+        let _devtoolsOpen = false;
+        (function pollDevTools() {
+            const dw = window.outerWidth  - window.innerWidth;
+            const dh = window.outerHeight - window.innerHeight;
+            if ((dw > CFG.devtoolsDelta || dh > CFG.devtoolsDelta)) {
+                if (!_devtoolsOpen) { _devtoolsOpen = true; showOverlay('DevTools opened'); }
+            } else {
+                _devtoolsOpen = false;
+            }
+            setTimeout(pollDevTools, 1000);
+        })();
+
+        /* ── LAYER 8: IOS CAPTURE DETECTION ──────────── */
+        // On some iOS versions, screen capture temporarily triggers visibilitychange
+        // We also detect if the page loses paint focus (Safari-specific)
+        if ('hidden' in document) {
+            // Already handled above via visibilitychange
+        }
+        // Additional iOS: detect if window loses compositing focus
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) { setTimeout(unblurDocs, 500); }
+        });
+
+        console.info('[IPAK-PROTECT] 🔒 Screenshot protection active — 8 layers enabled');
+
+    })();
+    </script>
+
+    <script>
+        // Smooth Cursor
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+            dot.style.left = `${posX}px`;
+            dot.style.top = `${posY}px`;
+            outline.animate({ left: `${posX - 20}px`, top: `${posY - 20}px` }, { duration: 400, fill: "forwards" });
+        });
+
+        document.querySelectorAll('a, button, input, .policy-card, .close-modal').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+
+        // Search Engine logic
+        const searchInput = document.getElementById('policySearch');
+        const cards = document.getElementsByClassName('policy-card');
+        
+        searchInput.addEventListener('input', () => {
+            let filter = searchInput.value.toLowerCase().trim();
+            for (let card of cards) {
+                let text = card.querySelector('span').getAttribute('title').toLowerCase();
+                let spanText = card.querySelector('span').textContent.toLowerCase();
+                card.style.display = (text.includes(filter) || spanText.includes(filter)) ? "flex" : "none";
+            }
+        });
+
+        // Modal setup helper
+        function setupModal(openBtnId, modalId, closeBtnId) {
+            const modal = document.getElementById(modalId);
+            const openBtn = document.getElementById(openBtnId);
+            const closeBtn = document.getElementById(closeBtnId);
+
+            openBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.style.display = 'flex';
+            });
+            closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+            window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+        }
+
+        setupModal('btn-grading',          'gradingModal',          'closeGradingBtn');
+        setupModal('btn-substance',         'substanceModal',        'closeSubstanceBtn');
+        setupModal('btn-disciplinary',      'disciplinaryModal',     'closeModalBtn');
+        setupModal('btn-dress-code',        'dressCodeModal',        'closeDressCodeBtn');
+        setupModal('btn-retirement',        'retirementModal',       'closeRetirementBtn');
+        setupModal('btn-email',             'emailModal',            'closeEmailBtn');
+        setupModal('btn-electronic-comm',   'electronicCommModal',   'closeElectronicCommBtn');
+        setupModal('btn-internship',        'internshipModal',       'closeInternshipBtn');
+        setupModal('btn-laptop',            'laptopModal',           'closeLaptopBtn');
+        setupModal('btn-gratuity',          'gratuityModal',         'closeGratuityBtn');
+        setupModal('btn-eobi',              'eobiModal',             'closeEobiBtn');
+        setupModal('btn-training',          'trainingModal',         'closeTrainingBtn');
+        setupModal('btn-hajj',              'hajjModal',             'closeHajjBtn');
+        setupModal('btn-vehicle-balloting', 'vehicleBallotingModal', 'closeVehicleBallotingBtn');
+        
+        // Added logout function for the standard header
+        function logout() { window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

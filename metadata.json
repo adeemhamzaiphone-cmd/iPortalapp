@@ -1,0 +1,6 @@
+{
+  "name": "IPAK Portal",
+  "description": "Employee service portal for International Packaging Films Limited (IPAK) featuring corporate news, policies, blood bank directory, transport routes, mess menu, internal marketplace, learning resources, and HR support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
